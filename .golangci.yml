@@ -1,0 +1,27 @@
+version: "2"
+linters:
+  default: all
+  disable:
+    - depguard
+    - exhaustruct
+    - nestif
+    - nlreturn
+    - noinlineerr
+    - nonamedreturns
+    - paralleltest
+    - testpackage
+    - wsl
+    - wsl_v5
+  exclusions:
+    rules:
+      - linters:
+          - funlen
+          - err113
+        path: _test\.go
+  settings:
+    ireturn:
+      allow:
+        - pflag.Value$
+        - parameter.Slice$
+        - error
+        - generic
