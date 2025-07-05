@@ -183,6 +183,7 @@ import (
 
 	"github.com/neiser/go-nagini/command"
 	"github.com/neiser/go-nagini/flag"
+	"github.com/neiser/go-nagini/flag/binding"
 	"github.com/spf13/viper"
 )
 
@@ -193,7 +194,7 @@ func main() {
 	)
 	command.New().
 		Flag(
-			flag.ViperBinding{
+			binding.Viper{
 				Value:     flag.New(&gitlabToken, flag.NotEmptyTrimmed),
 				ConfigKey: "GITLAB_TOKEN",
 			},
