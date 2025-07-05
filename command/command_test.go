@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/neiser/go-nagini/flag"
+	"github.com/neiser/go-nagini/flag/binding"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -167,7 +168,7 @@ func TestNew(t *testing.T) {
 				someVal string
 			)
 			cmd := New().Flag(
-				flag.ViperBinding{
+				binding.Viper{
 					Value:     flag.New(&someVal, flag.NotEmptyTrimmed),
 					ConfigKey: "SOME_VAL",
 				},
@@ -207,7 +208,7 @@ func TestNew(t *testing.T) {
 				someInts sliceOfInts
 			)
 			cmd := New().Flag(
-				flag.ViperBinding{
+				binding.Viper{
 					Value:     flag.NewSlice(&someInts, flag.ParseSliceOf[int](strconv.Atoi)),
 					ConfigKey: "SOME_INTEGERS",
 				},

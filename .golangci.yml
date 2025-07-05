@@ -5,7 +5,6 @@ formatters:
 linters:
   default: all
   disable:
-    - depguard
     - exhaustruct
     - nestif
     - nlreturn
@@ -28,6 +27,35 @@ linters:
           - revive
           - mnd
   settings:
+    depguard:
+      rules:
+        main:
+          list-mode: strict
+          files:
+            - '**/*.go'
+            - '!$test'
+            - '!**/flag/binding/*.go'
+            - '!**/examples/viper/*.go'
+          allow:
+            - $gostd
+            - github.com/spf13/cobra$
+            - github.com/spf13/pflag$
+            - github.com/neiser/go-nagini/command$
+            - github.com/neiser/go-nagini/flag$
+        binding:
+          list-mode: strict
+          files:
+            - '!$test'
+            - '**/flag/binding/*.go'
+            - '**/examples/viper/*.go'
+          allow:
+            - $gostd
+            - github.com/spf13/cobra$
+            - github.com/spf13/pflag$
+            - github.com/spf13/viper$
+            - github.com/neiser/go-nagini/command$
+            - github.com/neiser/go-nagini/flag$
+            - github.com/neiser/go-nagini/flag/binding$
     ireturn:
       allow:
         - pflag.Value$

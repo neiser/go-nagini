@@ -1,4 +1,4 @@
-package flag
+package binding
 
 import (
 	"fmt"
@@ -9,24 +9,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Binding allows a command flag to be bound to other sources of configuration.
-// This interface is detected while the flag is registered, see RegisterOptions.AfterRegistration.
-// See for example ViperBinding.
-type Binding interface {
-	BindTo(cmd *cobra.Command, flag *pflag.Flag)
-}
-
-// ViperBinding is a helper to bind a command flag (represented as a pflag.Value) to a config file ConfigKey.
-type ViperBinding struct {
+// Viper binds a command flag (given by a  pflag.Value instance) to a ConfigKey for Viper.
+// Implements flag.Binding.
+type Viper struct {
 	pflag.Value
 
 	ConfigKey string
 }
 
-// BindTo binds the flag in the PreRunE phase of the command to viper.
-// Using this phase is important as we need possibly flag values to be present.
-// Otherwise, flags would not override values read in from the config file.
-func (v ViperBinding) BindTo(cmd *cobra.Command, flag *pflag.Flag) {
+// BindTo binds the flag of the command to a viper configuration value.
+func (v Viper) BindTo(cmd *cobra.Command, flag *pflag.Flag) {
 	addToPreRunE(cmd, func(*cobra.Command, []string) error {
 		// Check if viper has a config value before binding the flag,
 		// as otherwise the config value would always be reported as present
@@ -47,7 +39,7 @@ func (v ViperBinding) BindTo(cmd *cobra.Command, flag *pflag.Flag) {
 	})
 }
 
-func (v ViperBinding) setValueFromViper() error {
+func (v Viper) setValueFromViper() error {
 	// If the current flag value, and we have something set from Viper,
 	// we set the current value to the viper config value.
 	if sliceValue, ok := v.Value.(pflag.SliceValue); ok {
@@ -71,19 +63,4 @@ func (v ViperBinding) setValueFromViper() error {
 		}
 	}
 	return nil
-}
-
-func addToPreRunE(cmd *cobra.Command, action func(cmd *cobra.Command, args []string) error) {
-	// important to catch existingPreRunE as local variable,
-	// as otherwise chaining the action callbacks leads to a stack overflow
-	if existingPreRunE := cmd.PreRunE; existingPreRunE != nil {
-		cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-			if err := existingPreRunE(cmd, args); err != nil {
-				return err
-			}
-			return action(cmd, args)
-		}
-	} else {
-		cmd.PreRunE = action
-	}
 }

@@ -45,6 +45,13 @@ func (o RegisterOptions) SelectFlags(cmd *cobra.Command) *pflag.FlagSet {
 	return cmd.Flags()
 }
 
+// Binding allows a command flag to be bound to other sources of configuration.
+// This interface is detected while the flag is registered, see RegisterOptions.AfterRegistration.
+// See for example ViperBinding.
+type Binding interface {
+	BindTo(cmd *cobra.Command, flag *pflag.Flag)
+}
+
 // AfterRegistration is called after the parameter was registered.
 // Note that 'value' parameter can be nil (happens when registering a simple FlagBool parameter).
 // See command.Command.
