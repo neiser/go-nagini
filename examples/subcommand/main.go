@@ -1,0 +1,44 @@
+package main
+
+import (
+	"errors"
+	"log"
+
+	"github.com/neiser/go-nagini/command"
+	"github.com/neiser/go-nagini/flag"
+)
+
+var ErrCannotUseMagic = errors.New("cannot use magic")
+
+func main() {
+	var (
+		useMagic bool
+	)
+	command.New().
+		FlagBool(&useMagic, flag.RegisterOptions{
+			Name:       "use-magic",
+			Usage:      "Use some magic, c'mon",
+			Persistent: true,
+		}).
+		AddCommands(
+			command.New().
+				Use("muggle").
+				Short("A person which cannot use magic").
+				Run(func() error {
+					if useMagic {
+						return ErrCannotUseMagic
+					}
+					return nil
+				}),
+			command.New().
+				Use("wizard").
+				Short("A person which may use magic").
+				Run(func() error {
+					if useMagic {
+						log.Printf("Abracadabra!")
+					}
+					return nil
+				}),
+		).
+		Execute()
+}

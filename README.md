@@ -1,11 +1,16 @@
-# Nagini - Fluent API for Cobra
+# Nagini - Fluent and generic API for Cobra
 
 ![coverage](https://raw.githubusercontent.com/neiser/go-nagini/badges/.badges/main/coverage.svg)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 Nagini wraps the famous 
 [Cobra CLI library](https://github.com/spf13/cobra) 
-with a fluent API.
+with a fluent API and Go generics.
+
+It supports slice values (comma-separated values) and arbitrary parsing.
+
+It optionally binds flags to the
+[Viper](https://github.com/spf13/viper) configuration library.
 
 ## Installation
 
@@ -65,7 +70,34 @@ func main() {
 
 Run with
 ```shell
-go run github.com/neiser/go-nagini/examples/simple --my-name Harry
+go run ./examples/simple --my-name Harry
+```
+
+### Command with slice flag
+
+Showing [`examples/slice/main.go`](./examples/slice/main.go):
+
+```go:examples/slice/main.go
+
+```
+
+Run with
+```shell
+go run ./examples/slice --some-ints 5,6,7
+```
+
+### Adding subcommands with fluent description
+
+Showing [`examples/subcommand/main.go`](./examples/subcommand/main.go):
+
+```go:examples/subcommand/main.go
+
+```
+
+Run with
+```shell
+go run ./examples/subcommand wizard --use-magic
+go run ./examples/subcommand muggle --use-magic
 ```
 
 ### Binding a flag to Viper, flag value takes precedence over Viper
@@ -110,11 +142,11 @@ func main() {
 
 Run with
 ```shell
-GITLAB_TOKEN=bla go run github.com/neiser/go-nagini/examples/viper
+GITLAB_TOKEN=bla go run ./examples/viper
 ```
 or 
 ```shell
-GITLAB_TOKEN=bla go run github.com/neiser/go-nagini/examples/viper --gitlab-token blub
+GITLAB_TOKEN=bla go run ./examples/viper --gitlab-token blub
 ```
 
 
