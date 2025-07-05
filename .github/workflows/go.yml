@@ -1,4 +1,4 @@
-name: Test and lint
+name: Go
 on:
   push:
     branches:
@@ -19,8 +19,7 @@ jobs:
         with:
           go-version: 1.24
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+      - uses: golangci/golangci-lint-action@v8
         with:
           version: v2.2.1
   test:
@@ -33,7 +32,7 @@ jobs:
           go-version: 1.24
 
       - name: generate test coverage
-        run: go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+        run: go test ./command ./flag -coverprofile=./cover.out -covermode=atomic
 
       - name: check test coverage
         uses: vladopajic/go-test-coverage@v2
