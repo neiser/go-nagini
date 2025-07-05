@@ -1,6 +1,7 @@
 # Nagini - Fluent and generic API for Cobra
 
 ![coverage](https://raw.githubusercontent.com/neiser/go-nagini/badges/.badges/main/coverage.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/neiser/go-nagini)](https://goreportcard.com/report/github.com/neiser/go-nagini)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 Nagini wraps the famous 
