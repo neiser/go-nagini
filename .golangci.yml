@@ -1,0 +1,36 @@
+version: "2"
+formatters:
+  enable:
+    - gci
+linters:
+  default: all
+  disable:
+    - depguard
+    - exhaustruct
+    - nestif
+    - nlreturn
+    - noinlineerr
+    - nonamedreturns
+    - paralleltest
+    - testpackage
+    - wsl
+    - wsl_v5
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - funlen
+          - err113
+          - varnamelen
+          - lll
+      - path: examples/
+        linters:
+          - revive
+          - mnd
+  settings:
+    ireturn:
+      allow:
+        - pflag.Value$
+        - flag.Slice$
+        - error
+        - generic
