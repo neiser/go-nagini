@@ -32,7 +32,7 @@ jobs:
           go-version: 1.24
 
       - name: generate test coverage
-        run: go test ./command ./flag -coverprofile=./cover.out -covermode=atomic
+        run: go test ./command ./flag -coverprofile=./cover.out -covermode=atomic -coverpkg=./flag,./command
 
       - name: check test coverage
         uses: vladopajic/go-test-coverage@v2
