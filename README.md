@@ -78,6 +78,31 @@ go run ./examples/simple --my-name Harry
 Showing [`examples/slice/main.go`](./examples/slice/main.go):
 
 ```go:examples/slice/main.go
+package main
+
+import (
+	"log"
+	"strconv"
+
+	"github.com/neiser/go-nagini/command"
+	"github.com/neiser/go-nagini/flag"
+)
+
+func main() {
+	var (
+		someInts []int
+	)
+	command.New().
+		Flag(flag.NewSlice(&someInts, flag.ParseSliceOf(strconv.Atoi)), flag.RegisterOptions{
+			Name:     "some-ints",
+			Required: true,
+		}).
+		Run(func() error {
+			log.Printf("Got integers: '%v'", someInts)
+			return nil
+		}).
+		Execute()
+}
 
 ```
 
@@ -91,6 +116,50 @@ go run ./examples/slice --some-ints 5,6,7
 Showing [`examples/subcommand/main.go`](./examples/subcommand/main.go):
 
 ```go:examples/subcommand/main.go
+package main
+
+import (
+	"errors"
+	"log"
+
+	"github.com/neiser/go-nagini/command"
+	"github.com/neiser/go-nagini/flag"
+)
+
+var ErrCannotUseMagic = errors.New("cannot use magic")
+
+func main() {
+	var (
+		useMagic bool
+	)
+	command.New().
+		FlagBool(&useMagic, flag.RegisterOptions{
+			Name:       "use-magic",
+			Usage:      "Use some magic, c'mon",
+			Persistent: true,
+		}).
+		AddCommands(
+			command.New().
+				Use("muggle").
+				Short("A person which cannot use magic").
+				Run(func() error {
+					if useMagic {
+						return ErrCannotUseMagic
+					}
+					return nil
+				}),
+			command.New().
+				Use("wizard").
+				Short("A person which may use magic").
+				Run(func() error {
+					if useMagic {
+						log.Printf("Abracadabra!")
+					}
+					return nil
+				}),
+		).
+		Execute()
+}
 
 ```
 
