@@ -30,42 +30,42 @@ Showing [`examples/simple/main.go`](./examples/simple/main.go):
 package main
 
 import (
-	"log"
+  "log"
 
-	"github.com/neiser/go-nagini/command"
-	"github.com/neiser/go-nagini/flag"
+  "github.com/neiser/go-nagini/command"
+  "github.com/neiser/go-nagini/flag"
 )
 
 type (
-	Wand string
+  Wand string
 )
 
 func main() {
-	var (
-		myName       string
-		favoriteWand Wand = "elder"
-		iAmVoldemort bool
-	)
-	command.New().
-		Flag(flag.New(&myName, flag.NotEmpty), flag.RegisterOptions{
-			Name:     "my-name",
-			Required: true,
-		}).
-		Flag(flag.New(&favoriteWand, flag.NotEmptyTrimmed), flag.RegisterOptions{
-			Name:  "favorite-wand",
-			Usage: "Specify magic wand",
-		}).
-		FlagBool(&iAmVoldemort, flag.RegisterOptions{
-			Name: "i-am-voldemort",
-		}).
-		Run(func() error {
-			if iAmVoldemort {
-				return command.WithExitCodeError{ExitCode: 66}
-			}
-			log.Printf("I'm %s and my favorite wand is '%s'", myName, favoriteWand)
-			return nil
-		}).
-		Execute()
+  var (
+    myName       string
+    favoriteWand Wand = "elder"
+    iAmVoldemort bool
+  )
+  command.New().
+    Flag(flag.New(&myName, flag.NotEmpty), flag.RegisterOptions{
+      Name:     "my-name",
+      Required: true,
+    }).
+    Flag(flag.New(&favoriteWand, flag.NotEmptyTrimmed), flag.RegisterOptions{
+      Name:  "favorite-wand",
+      Usage: "Specify magic wand",
+    }).
+    Flag(flag.Bool(&iAmVoldemort), flag.RegisterOptions{
+      Name: "i-am-voldemort",
+    }).
+    Run(func() error {
+      if iAmVoldemort {
+        return command.WithExitCodeError{ExitCode: 66}
+      }
+      log.Printf("I'm %s and my favorite wand is '%s'", myName, favoriteWand)
+      return nil
+    }).
+    Execute()
 }
 
 ```
@@ -83,27 +83,27 @@ Showing [`examples/slice/main.go`](./examples/slice/main.go):
 package main
 
 import (
-	"log"
-	"strconv"
+  "log"
+  "strconv"
 
-	"github.com/neiser/go-nagini/command"
-	"github.com/neiser/go-nagini/flag"
+  "github.com/neiser/go-nagini/command"
+  "github.com/neiser/go-nagini/flag"
 )
 
 func main() {
-	var (
-		someInts []int
-	)
-	command.New().
-		Flag(flag.NewSlice(&someInts, flag.ParseSliceOf(strconv.Atoi)), flag.RegisterOptions{
-			Name:     "some-ints",
-			Required: true,
-		}).
-		Run(func() error {
-			log.Printf("Got integers: '%v'", someInts)
-			return nil
-		}).
-		Execute()
+  var (
+    someInts []int
+  )
+  command.New().
+    Flag(flag.NewSlice(&someInts, flag.ParseSliceOf(strconv.Atoi)), flag.RegisterOptions{
+      Name:     "some-ints",
+      Required: true,
+    }).
+    Run(func() error {
+      log.Printf("Got integers: '%v'", someInts)
+      return nil
+    }).
+    Execute()
 }
 
 ```
@@ -121,46 +121,49 @@ Showing [`examples/subcommand/main.go`](./examples/subcommand/main.go):
 package main
 
 import (
-	"errors"
-	"log"
+  "errors"
+  "log"
 
-	"github.com/neiser/go-nagini/command"
-	"github.com/neiser/go-nagini/flag"
+  "github.com/neiser/go-nagini/command"
+  "github.com/neiser/go-nagini/flag"
 )
 
 var ErrCannotUseMagic = errors.New("cannot use magic")
 
 func main() {
-	var (
-		useMagic bool
-	)
-	command.New().
-		FlagBool(&useMagic, flag.RegisterOptions{
-			Name:       "use-magic",
-			Usage:      "Use some magic, c'mon",
-			Persistent: true,
-		}).
-		AddCommands(
-			command.New().
-				Use("muggle").
-				Short("A person which cannot use magic").
-				Run(func() error {
-					if useMagic {
-						return ErrCannotUseMagic
-					}
-					return nil
-				}),
-			command.New().
-				Use("wizard").
-				Short("A person which may use magic").
-				Run(func() error {
-					if useMagic {
-						log.Printf("Abracadabra!")
-					}
-					return nil
-				}),
-		).
-		Execute()
+  var (
+    useMagic bool
+  )
+  command.New().
+    Flag(flag.Bool(&useMagic), flag.RegisterOptions{
+      Name:       "use-magic",
+      Usage:      "Use some magic, c'mon",
+      Persistent: true,
+    }).
+    AddCommands(
+      command.New().
+        Use("muggle").
+        Short("A person which cannot use magic").
+        Run(func() error {
+          if useMagic {
+            return command.WithExitCodeError{
+              ExitCode: 21,
+              Wrapped:  ErrCannotUseMagic,
+            }
+          }
+          return nil
+        }),
+      command.New().
+        Use("wizard").
+        Short("A person which may use magic").
+        Run(func() error {
+          if useMagic {
+            log.Printf("Abracadabra!")
+          }
+          return nil
+        }),
+    ).
+    Execute()
 }
 
 ```
@@ -179,35 +182,48 @@ Showing [`examples/viper/main.go`](examples/viper/main.go):
 package main
 
 import (
-	"log"
+  "log"
 
-	"github.com/neiser/go-nagini/command"
-	"github.com/neiser/go-nagini/flag"
-	"github.com/neiser/go-nagini/flag/binding"
-	"github.com/spf13/viper"
+  "github.com/neiser/go-nagini/command"
+  "github.com/neiser/go-nagini/flag"
+  "github.com/neiser/go-nagini/flag/binding"
+  "github.com/spf13/viper"
 )
 
 func main() {
-	viper.AutomaticEnv() // tell Viper to read env
-	var (
-		gitlabToken string
-	)
-	command.New().
-		Flag(
-			binding.Viper{
-				Value:     flag.New(&gitlabToken, flag.NotEmptyTrimmed),
-				ConfigKey: "GITLAB_TOKEN",
-			},
-			flag.RegisterOptions{
-				Name:  "gitlab-token",
-				Usage: "A secret GitLab Token",
-			},
-		).
-		Run(func() error {
-			log.Printf("Gitlab Token length '%d'", len(gitlabToken))
-			return nil
-		}).
-		Execute()
+  viper.AutomaticEnv() // tell Viper to read env
+  var (
+    favoriteHouse = "Hufflepuff"
+    isEvil        = false
+  )
+  command.New().
+    Flag(
+      binding.Viper{
+        Value:     flag.New(&favoriteHouse, flag.NotEmptyTrimmed),
+        ConfigKey: "FAVORITE_HOUSE",
+      },
+      flag.RegisterOptions{
+        Name: "house",
+      },
+    ).
+    Flag(
+      binding.Viper{
+        Value:     flag.Bool(&isEvil),
+        ConfigKey: "IS_EVIL",
+      },
+      flag.RegisterOptions{
+        Shorthand: "e",
+      },
+    ).
+    Run(func() error {
+      prefix := "Favorite"
+      if isEvil {
+        prefix = "Evil favorite"
+      }
+      log.Printf("%s house is %s", prefix, favoriteHouse)
+      return nil
+    }).
+    Execute()
 }
 
 ```
@@ -226,6 +242,42 @@ FAVORITE_HOUSE=Slytherin go run ./examples/viper --house Hufflepuff
 Showing [`examples/mark/main.go`](examples/mark/main.go):
 
 ```go:examples/mark/main.go
+package main
+
+import (
+  "log"
+
+  "github.com/neiser/go-nagini/command"
+  "github.com/neiser/go-nagini/flag"
+)
+
+func main() {
+  var (
+    name         = "Harry"
+    iAmVoldemort bool
+  )
+  command.New().
+    Flag(flag.New(&name, flag.NotEmpty), flag.RegisterOptions{
+      Name: "name",
+    }).
+    Flag(flag.New(&name, flag.NotEmpty), flag.RegisterOptions{
+      Name: "nickname",
+    }).
+    Flag(flag.Bool(&iAmVoldemort), flag.RegisterOptions{
+      Name: "i-am-voldemort",
+    }).
+    MarkFlagsMutuallyExclusive(&name, &iAmVoldemort).
+    Run(func() error {
+      switch {
+      case iAmVoldemort:
+        log.Print("My name is Voldemort!")
+      case name != "":
+        log.Printf("My name is %s", name)
+      }
+      return nil
+    }).
+    Execute()
+}
 
 ```
 
