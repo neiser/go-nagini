@@ -47,11 +47,11 @@ func main() {
     iAmVoldemort bool
   )
   command.New().
-    Flag(flag.New(&myName, flag.NotEmpty), flag.RegisterOptions{
+    Flag(flag.String(&myName, flag.NotEmpty), flag.RegisterOptions{
       Name:     "my-name",
       Required: true,
     }).
-    Flag(flag.New(&favoriteWand, flag.NotEmptyTrimmed), flag.RegisterOptions{
+    Flag(flag.String(&favoriteWand, flag.NotEmptyTrimmed), flag.RegisterOptions{
       Name:  "favorite-wand",
       Usage: "Specify magic wand",
     }).
@@ -207,7 +207,7 @@ func main() {
   command.New().
     Flag(
       binding.Viper{
-        Value:     flag.New(&favoriteHouse, flag.NotEmptyTrimmed),
+        Value:     flag.String(&favoriteHouse, flag.NotEmptyTrimmed),
         ConfigKey: "FAVORITE_HOUSE",
       },
       flag.RegisterOptions{
@@ -265,10 +265,10 @@ func main() {
     iAmVoldemort bool
   )
   command.New().
-    Flag(flag.New(&name, flag.NotEmpty), flag.RegisterOptions{
+    Flag(flag.String(&name, flag.NotEmpty), flag.RegisterOptions{
       Name: "name",
     }).
-    Flag(flag.New(&name, flag.NotEmpty), flag.RegisterOptions{
+    Flag(flag.String(&name, flag.NotEmpty), flag.RegisterOptions{
       Name: "nickname",
     }).
     Flag(flag.Bool(&iAmVoldemort), flag.RegisterOptions{
