@@ -18,14 +18,16 @@ linters:
     rules:
       - path: _test\.go
         linters:
-          - funlen
           - err113
-          - varnamelen
+          - funlen
           - lll
+          - maintidx
+          - varnamelen
+          - wrapcheck
       - path: examples/
         linters:
-          - revive
           - mnd
+          - revive
   settings:
     depguard:
       rules:
@@ -58,7 +60,7 @@ linters:
             - github.com/neiser/go-nagini/flag/binding$
     ireturn:
       allow:
-        - pflag.Value$
+        - flag.Value$
         - flag.Slice$
         - error
         - generic

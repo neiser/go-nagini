@@ -8,8 +8,14 @@ import (
 
 // Parser is used in New to convert from string to the generic type T.
 // Note that this signature matches standard conversion functions, such as [strconv.Atoi].
-// Use ErrParser when an error occurs.
+// Implementations of Parser may use ErrParser when an error occurs.
 type Parser[T any] func(s string) (T, error)
+
+// TargetParser can be implemented by given target pointers
+// Implementations of TargetParser may use ErrParser when an error occurs.
+type TargetParser interface {
+	Parse(s string) error
+}
 
 // ErrParser can be used when implementations of Parser fail.
 var ErrParser = errors.New("cannot parse parameter")
@@ -41,6 +47,12 @@ func AnyString[T ~string](s string) (T, error) {
 
 // SliceParser is a Parser Slice, see NewSlice and ParseSliceOf.
 type SliceParser[T any] func(ss []string) ([]T, error)
+
+// SliceTargetParser can be implemented by given target pointers
+// Implementations of SliceTargetParser may use ErrParser when an error occurs.
+type SliceTargetParser interface {
+	Parse(ss []string) error
+}
 
 // ParseSliceOf turns a Parser into a SliceParser, calling the given single element parser for each slice element.
 // It propagates parsing failures of the single element parser and telling at which element the error happened.

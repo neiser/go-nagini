@@ -15,7 +15,7 @@ func main() {
 		useMagic bool
 	)
 	command.New().
-		FlagBool(&useMagic, flag.RegisterOptions{
+		Flag(flag.Bool(&useMagic), flag.RegisterOptions{
 			Name:       "use-magic",
 			Usage:      "Use some magic, c'mon",
 			Persistent: true,
@@ -26,7 +26,10 @@ func main() {
 				Short("A person which cannot use magic").
 				Run(func() error {
 					if useMagic {
-						return ErrCannotUseMagic
+						return command.WithExitCodeError{
+							ExitCode: 21,
+							Wrapped:  ErrCannotUseMagic,
+						}
 					}
 					return nil
 				}),

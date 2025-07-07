@@ -10,7 +10,7 @@ import (
 // RegisterOptions are used when registering a flag with a cobra.Command.
 // Some properties here are straightforwardly set, but some others need support in AfterRegistration below.
 type RegisterOptions struct {
-	Name, Shorthand, Usage string
+	Name, Shorthand, Usage, NoOptDefVal string
 	// Required forces this flag to be present.
 	Required bool
 	// Persistent makes the flag to be registered as a persistent flag.
@@ -55,12 +55,15 @@ type Binding interface {
 // AfterRegistration is called after the parameter was registered.
 // Note that 'value' parameter can be nil (happens when registering a simple FlagBool parameter).
 // See command.Command.
-func (o RegisterOptions) AfterRegistration(cmd *cobra.Command, flag *pflag.Flag, value pflag.Value) {
+func (o RegisterOptions) AfterRegistration(cmd *cobra.Command, flag *pflag.Flag, value Value) {
 	if binding, ok := value.(Binding); ok {
 		binding.BindTo(cmd, flag)
 	}
 	if o.Required {
 		_ = cmd.MarkFlagRequired(flag.Name)
+	}
+	if value.IsBoolFlag() {
+		flag.NoOptDefVal = "true"
 	}
 }
 

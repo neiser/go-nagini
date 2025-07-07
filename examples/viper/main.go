@@ -12,21 +12,34 @@ import (
 func main() {
 	viper.AutomaticEnv() // tell Viper to read env
 	var (
-		gitlabToken string
+		favoriteHouse = "Hufflepuff"
+		isEvil        = false
 	)
 	command.New().
 		Flag(
 			binding.Viper{
-				Value:     flag.New(&gitlabToken, flag.NotEmptyTrimmed),
-				ConfigKey: "GITLAB_TOKEN",
+				Value:     flag.New(&favoriteHouse, flag.NotEmptyTrimmed),
+				ConfigKey: "FAVORITE_HOUSE",
 			},
 			flag.RegisterOptions{
-				Name:  "gitlab-token",
-				Usage: "A secret GitLab Token",
+				Name: "house",
+			},
+		).
+		Flag(
+			binding.Viper{
+				Value:     flag.Bool(&isEvil),
+				ConfigKey: "IS_EVIL",
+			},
+			flag.RegisterOptions{
+				Shorthand: "e",
 			},
 		).
 		Run(func() error {
-			log.Printf("Gitlab Token length '%d'", len(gitlabToken))
+			prefix := "Favorite"
+			if isEvil {
+				prefix = "Evil favorite"
+			}
+			log.Printf("%s house is %s", prefix, favoriteHouse)
 			return nil
 		}).
 		Execute()

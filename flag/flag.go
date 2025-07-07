@@ -9,32 +9,69 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// Value extends pflag.Value with a method to obtain the target pointer of the registered flag.
+type Value interface {
+	pflag.Value
+	// Target returns the target pointer, used as key for looking up registered flags.
+	Target() any
+	// IsBoolFlag returns true if the target points to a type with kind boolean.
+	IsBoolFlag() bool
+}
+
 // New constructs a new flag with a generic type as a target.
 // The Parser converts from the given string value to the target type.
-func New[T any](target *T, parser Parser[T]) pflag.Value {
-	return anyValue[T]{target, parser}
+// If the given Parser is nil, falls back to implementation of TargetParser on type *T,
+// panics if nothing is found.
+func New[T any](target *T, parser Parser[T]) Value {
+	result := anyValue[T]{target: target, parser: parser}
+	if parser == nil {
+		var ok bool
+		if result.targetParser, ok = any(target).(TargetParser); !ok {
+			panic(fmt.Sprintf("flag for target %p (value '%v') must specify non-nil parser, "+
+				"as flag.TargetParser interface is also not implemented", target, *target))
+		}
+	}
+	return result
 }
 
 type anyValue[T any] struct {
-	target *T
-	parser Parser[T]
+	target       *T
+	parser       Parser[T]
+	targetParser TargetParser
+}
+
+//nolint:ireturn
+func (v anyValue[T]) Target() any {
+	return v.target
 }
 
 func (v anyValue[T]) String() string {
 	return convertToString(*v.target)
 }
 
+//nolint:wrapcheck
 func (v anyValue[T]) Set(s string) (err error) {
+	if v.targetParser != nil {
+		return v.targetParser.Parse(s)
+	}
 	*v.target, err = v.parser(s)
 	return
 }
 
 func (v anyValue[T]) Type() string {
+	if v.IsBoolFlag() {
+		return ""
+	}
 	typeOf := reflect.TypeOf(*v.target)
 	if _, pkgName := path.Split(typeOf.PkgPath()); len(pkgName) > 0 {
 		return fmt.Sprintf("%s.%s", pkgName, typeOf.Name())
 	}
 	return typeOf.Name()
+}
+
+func (v anyValue[T]) IsBoolFlag() bool {
+	typeOf := reflect.TypeOf(*v.target)
+	return typeOf.Kind() == reflect.Bool
 }
 
 func convertToString[T any](t T) string {

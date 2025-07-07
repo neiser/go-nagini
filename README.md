@@ -214,13 +214,29 @@ func main() {
 
 Run with
 ```shell
-GITLAB_TOKEN=bla go run ./examples/viper
+IS_EVIL=true FAVORITE_HOUSE=Slytherin go run ./examples/viper
 ```
-or 
+or
 ```shell
-GITLAB_TOKEN=bla go run ./examples/viper --gitlab-token blub
+FAVORITE_HOUSE=Slytherin go run ./examples/viper --house Hufflepuff
 ```
 
+### Marking groups of flags 
+
+Showing [`examples/mark/main.go`](examples/mark/main.go):
+
+```go:examples/mark/main.go
+
+```
+
+Run with
+```shell
+go run ./examples/mark --i-am-voldemort
+```
+or (will fail)
+```shell
+go run ./examples/mark --i-am-voldemort --name "Harry"
+```
 
 ## Development and Contributions
 

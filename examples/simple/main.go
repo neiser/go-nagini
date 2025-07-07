@@ -26,7 +26,7 @@ func main() {
 			Name:  "favorite-wand",
 			Usage: "Specify magic wand",
 		}).
-		FlagBool(&iAmVoldemort, flag.RegisterOptions{
+		Flag(flag.Bool(&iAmVoldemort), flag.RegisterOptions{
 			Name: "i-am-voldemort",
 		}).
 		Run(func() error {

@@ -8,7 +8,6 @@ import (
 
 	"github.com/neiser/go-nagini/flag"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 // A Command wraps cobra.Command and provides a fluent API to build CLI commands.
@@ -18,15 +17,22 @@ import (
 // In any case, use Short and Long and LongParagraph to build the help message.
 type Command struct {
 	*cobra.Command
+
+	// flagNames holds the registered flag names for a command,
+	// identified by the target pointer as the map key.
+	flagNames map[uintptr][]string
 }
 
 // New constructs a command.
 func New() Command {
-	return Command{&cobra.Command{
-		// We do our own usage output in Command.Execute below.
-		SilenceErrors: true,
-		SilenceUsage:  true,
-	}}
+	return Command{
+		&cobra.Command{
+			// We do our own usage output in Command.Execute below.
+			SilenceErrors: true,
+			SilenceUsage:  true,
+		},
+		map[uintptr][]string{},
+	}
 }
 
 // Use specify the command usage, see cobra.Command#Use.
@@ -59,21 +65,14 @@ func (c Command) long(add, sep string) Command {
 	return c
 }
 
-// Flag registers a new generic parameter.
-// Use flag.New to construct one and set appropriate flag.RegisterOptions.
-// The given param might implement flag.Binding.
-func (c Command) Flag(flagValue pflag.Value, options flag.RegisterOptions) Command {
+// Flag registers a new flag.
+// Use [flag.New], [flag.Bool] or [flag.Slice] to construct one and set appropriate [flag.RegisterOptions].
+// The given param might implement [flag.Binding].
+func (c Command) Flag(flagValue flag.Value, options flag.RegisterOptions) Command {
 	flags := options.SelectFlags(c.Command)
 	newFlag := flags.VarPF(flagValue, options.Name, options.Shorthand, options.Usage)
+	c.addFlagName(flagValue.Target(), options.Name)
 	options.AfterRegistration(c.Command, newFlag, flagValue)
-	return c
-}
-
-// FlagBool registers a boolean parameter with the given flag.RegisterOptions.
-func (c Command) FlagBool(target *bool, options flag.RegisterOptions) Command {
-	flags := options.SelectFlags(c.Command)
-	flags.BoolVarP(target, options.Name, options.Shorthand, *target, options.Usage)
-	options.AfterRegistration(c.Command, flags.Lookup(options.Name), nil)
 	return c
 }
 

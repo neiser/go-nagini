@@ -12,25 +12,53 @@ import (
 
 // Slice is constructed from NewSlice.
 // This interface explicitly declares that this is a pflag.SliceValue,
-// but it must also implement pflag.Value to make it registrable as a command flag.
+// but it must also implement Value to make it registrable as a command flag.
 type Slice interface {
+	Value
 	pflag.SliceValue
-	pflag.Value
 }
 
 // NewSlice construct a new Slice flag having multiple values, parsed by given SliceParser.
 // See also ParseSliceOf.
+// If SliceParser is nil, falls back to an implementation of SliceTargetParser on type *E,
+// panics if nothing is found.
 func NewSlice[T any, E ~[]T](target *E, parser SliceParser[T]) Slice {
-	return anySliceValue[T, E]{target, parser}
+	result := anySliceValue[T, E]{target: target, parser: parser}
+	if parser == nil {
+		var ok bool
+		if result.targetParser, ok = any(target).(SliceTargetParser); !ok {
+			panic(fmt.Sprintf("flag for slice target %p (value '%v') must specify non-nil parser, "+
+				"as flag.SliceTargetParser interface is also not implemented", target, *target))
+		}
+	}
+	return result
 }
 
 type anySliceValue[T any, E ~[]T] struct {
-	target *E
-	parser SliceParser[T]
+	target       *E
+	parser       SliceParser[T]
+	targetParser SliceTargetParser
+}
+
+//nolint:ireturn
+func (v anySliceValue[T, E]) Target() any {
+	return v.target
+}
+
+func (v anySliceValue[T, E]) IsBoolFlag() bool {
+	return false
 }
 
 func (v anySliceValue[T, E]) String() string {
-	return v.asCsv()
+	switch {
+	case *v.target == nil:
+
+		return "<nil>"
+	case len(*v.target) == 0:
+		return "<empty>"
+	default:
+		return v.asCsv()
+	}
 }
 
 func readAsCSV(val string) ([]string, error) {
@@ -78,7 +106,11 @@ func (v anySliceValue[T, E]) Append(s string) error {
 	return nil
 }
 
+//nolint:wrapcheck
 func (v anySliceValue[T, E]) Replace(ss []string) (err error) {
+	if v.targetParser != nil {
+		return v.targetParser.Parse(ss)
+	}
 	*v.target, err = v.parser(ss)
 	return
 }

@@ -86,6 +86,22 @@ func TestNew(t *testing.T) {
 		})
 	})
 
+	t.Run("bool flag", func(t *testing.T) {
+		var (
+			someBool bool
+		)
+		cmd := New().
+			Flag(flag.Bool(&someBool), flag.RegisterOptions{
+				Name: "some-bool",
+			}).
+			Run(func() error {
+				return nil // dummy to make this cmd runnable
+			})
+		require.NoError(t, cmd.runTest(t, []string{"--some-bool"}, func() {
+			require.True(t, someBool)
+		}))
+	})
+
 	t.Run("error handling and propagation", func(t *testing.T) {
 		someError := errors.New("some error")
 		t.Run("without exit code", func(t *testing.T) {
@@ -204,53 +220,72 @@ func TestNew(t *testing.T) {
 			type (
 				sliceOfInts []int
 			)
+
 			var (
 				someInts sliceOfInts
+				someBool yesOrNoType = true
 			)
-			cmd := New().Flag(
-				binding.Viper{
-					Value:     flag.NewSlice(&someInts, flag.ParseSliceOf[int](strconv.Atoi)),
-					ConfigKey: "SOME_INTEGERS",
-				},
-				flag.RegisterOptions{
-					Name: "some-ints",
-				},
-			).Run(func() error {
-				// have some dummy to always run through PreRunE
-				return nil
-			})
+			cmd := New().
+				Flag(
+					binding.Viper{
+						Value:     flag.NewSlice(&someInts, flag.ParseSliceOf[int](strconv.Atoi)),
+						ConfigKey: "SOME_INTEGERS",
+					},
+					flag.RegisterOptions{Name: "some-ints"},
+				).
+				Flag(
+					binding.Viper{
+						Value:     flag.New(&someBool, nil),
+						ConfigKey: "SOME_BOOL",
+					},
+					flag.RegisterOptions{Name: "some-bool"},
+				).
+				Run(func() error {
+					// have some dummy to always run through PreRunE
+					return nil
+				})
 
 			// sub testcases modify state of someInts, so run the "not set" case first
 
 			t.Run("flag not set, env not set", func(t *testing.T) {
 				require.NoError(t, cmd.runTest(t, []string{}, func() {
 					require.Empty(t, someInts)
+					require.True(t, bool(someBool))
 				}))
 			})
 
 			t.Setenv("SOME_INTEGERS", "2,x3x,4")
 
-			t.Run("env parsing fails", func(t *testing.T) {
+			t.Run("env parsing fails, help message properly shown", func(t *testing.T) {
+				getStdout, getStderr := cmd.captureCobraOutput(t)
 				require.ErrorContains(t, cmd.runTestWithArgs(t, []string{}, func(exitCode int) {
 					require.Equal(t, 1, exitCode)
-				}), `cannot set slice value to viper config SOME_INTEGERS='[2 x3x 4]': cannot parse slice element 1: strconv.Atoi: parsing "x3x": invalid syntax`)
+				}), `cannot replace slice value to viper config SOME_INTEGERS='[2 x3x 4]': cannot parse slice element 1: strconv.Atoi: parsing "x3x": invalid syntax`)
+				assert.Contains(t, getStderr(), "Error: cannot replace slice value to viper config")
+				stdout := getStdout()
+				assert.Contains(t, stdout, "--some-bool[=true]    (default true)")
+				assert.Contains(t, stdout, "--some-ints []int     (default <nil>)")
 			})
 
 			t.Setenv("SOME_INTEGERS", "2,3,4")
+			t.Setenv("SOME_BOOL", "no")
 
 			t.Run("flag not set, but env set", func(t *testing.T) {
 				require.NoError(t, cmd.runTest(t, []string{}, func() {
 					require.Equal(t, sliceOfInts{2, 3, 4}, someInts)
+					require.False(t, bool(someBool))
 				}))
 			})
 
 			t.Run("flag is preferred over env", func(t *testing.T) {
-				require.NoError(t, cmd.runTest(t, []string{"--some-ints", "5,6,7"}, func() {
+				require.NoError(t, cmd.runTest(t, []string{"--some-ints", "5,6,7", "--some-bool=yes"}, func() {
 					require.Equal(t, sliceOfInts{5, 6, 7}, someInts)
+					require.True(t, bool(someBool))
 				}))
 			})
 
 			t.Run("flag parsing fails", func(t *testing.T) {
+				cmd.captureCobraOutput(t) // just to silence confusing error output during tests
 				require.ErrorContains(t, cmd.runTestWithArgs(t, []string{"--some-ints", "5,x6x,7"}, func(exitCode int) {
 					require.Equal(t, 1, exitCode)
 				}), `invalid argument "5,x6x,7" for "--some-ints" flag: cannot parse slice element 1: strconv.Atoi: parsing "x6x": invalid syntax`)
@@ -313,4 +348,22 @@ func captureError(t *testing.T) (getError func() error) {
 	return func() error {
 		return capturedError
 	}
+}
+
+type yesOrNoType bool
+
+func (v *yesOrNoType) Parse(s string) error {
+	switch s {
+	case "yes":
+		*v = true
+	case "no":
+		*v = false
+	default:
+		vAsBool, err := strconv.ParseBool(s)
+		if err != nil {
+			return err
+		}
+		*v = yesOrNoType(vAsBool)
+	}
+	return nil
 }
