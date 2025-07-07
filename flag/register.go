@@ -7,10 +7,19 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// RegisterOptions are used when registering a flag with a cobra.Command.
+// RegisterOptions are used when registering a flag with a cobra.Command and the [pflag.Flag].
 // Some properties here are straightforwardly set, but some others need support in AfterRegistration below.
 type RegisterOptions struct {
-	Name, Shorthand, Usage, NoOptDefVal string
+	// Name is the flag name (double dash prefix). This should always be set!
+	Name string
+	// Shorthand is an optional short flag (single dash prefix).
+	Shorthand string
+	// Usage describes how to use that flag.
+	Usage string
+	// Deprecated is shown as an alternative for this deprecated flag.
+	Deprecated string
+	// Hidden hides the flag from the usage help output.
+	Hidden bool
 	// Required forces this flag to be present.
 	Required bool
 	// Persistent makes the flag to be registered as a persistent flag.
@@ -59,6 +68,8 @@ func (o RegisterOptions) AfterRegistration(cmd *cobra.Command, flag *pflag.Flag,
 	if binding, ok := value.(Binding); ok {
 		binding.BindTo(cmd, flag)
 	}
+	flag.Deprecated = o.Deprecated
+	flag.Hidden = o.Hidden
 	if o.Required {
 		_ = cmd.MarkFlagRequired(flag.Name)
 	}

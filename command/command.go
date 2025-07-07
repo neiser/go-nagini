@@ -88,13 +88,41 @@ func (c Command) AddCommands(commands ...Command) Command {
 // Run sets the given code to run during Execute and returned errors are logged.
 // The error may implement WithExitCodeError and is wrapped in fromRunCallbackError.
 func (c Command) Run(run func() error) Command {
-	c.RunE = func(*cobra.Command, []string) error {
+	c.RunE = wrapRunCallbackError(run)
+	return c
+}
+
+// AddPersistentPreRun adds the given code to run persistently, that means it will be executed
+// also for sub commands added with AddCommands.
+// Pre-runs before PreRun of command itself and the Run of the command.
+func (c Command) AddPersistentPreRun(run func() error) Command {
+	c.addToPersistentPreRunE(wrapRunCallbackError(run))
+	return c
+}
+
+func wrapRunCallbackError(run func() error) func(*cobra.Command, []string) error {
+	return func(*cobra.Command, []string) error {
 		if err := run(); err != nil {
 			return fromRunCallbackError{err}
 		}
 		return nil
 	}
-	return c
+}
+
+//nolint:funcorder
+func (c Command) addToPersistentPreRunE(action func(*cobra.Command, []string) error) {
+	// important to catch existing as local variable,
+	// as otherwise chaining the action callbacks leads to a stack overflow
+	if existing := c.PersistentPreRunE; existing != nil {
+		c.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+			if err := existing(cmd, args); err != nil {
+				return err
+			}
+			return action(cmd, args)
+		}
+	} else {
+		c.PersistentPreRunE = action
+	}
 }
 
 // Execute executes the command using cobra and takes care of error handling.

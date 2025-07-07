@@ -9,11 +9,11 @@ import (
 // Using this phase is important as we need possibly flag values to be present.
 // Otherwise, flags would not override values read in from the config file.
 func addToPreRunE(cmd *cobra.Command, action func(cmd *cobra.Command, args []string) error) {
-	// important to catch existingPreRunE as local variable,
+	// important to catch existing as local variable,
 	// as otherwise chaining the action callbacks leads to a stack overflow
-	if existingPreRunE := cmd.PreRunE; existingPreRunE != nil {
+	if existing := cmd.PreRunE; existing != nil {
 		cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-			if err := existingPreRunE(cmd, args); err != nil {
+			if err := existing(cmd, args); err != nil {
 				return err
 			}
 			return action(cmd, args)

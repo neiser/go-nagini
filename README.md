@@ -290,6 +290,19 @@ or (will fail)
 go run ./examples/mark --i-am-voldemort --name "Harry"
 ```
 
+### Implementing flag.Value for VerboseLevel
+
+Showing [`examples/verbose/main.go`](examples/verbose/main.go):
+
+```go:examples/verbose/main.go
+
+```
+
+Run with
+```shell
+go run ./examples/verbose -vvv
+```
+
 ## Development and Contributions
 
 Install the provided 
