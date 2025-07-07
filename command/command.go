@@ -66,7 +66,7 @@ func (c Command) long(add, sep string) Command {
 }
 
 // Flag registers a new flag.
-// Use [flag.New], [flag.Bool] or [flag.Slice] to construct one and set appropriate [flag.RegisterOptions].
+// Use [flag.String], [flag.Bool] or [flag.Slice] to construct one and set appropriate [flag.RegisterOptions].
 // The given param might implement [flag.Binding].
 func (c Command) Flag(flagValue flag.Value, options flag.RegisterOptions) Command {
 	flags := options.SelectFlags(c.Command)

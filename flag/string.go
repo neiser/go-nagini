@@ -1,28 +1,17 @@
-// Package flag adds flags to commands.
 package flag
 
 import (
 	"fmt"
 	"path"
 	"reflect"
-
-	"github.com/spf13/pflag"
 )
 
-// Value extends pflag.Value with a method to obtain the target pointer of the registered flag.
-type Value interface {
-	pflag.Value
-	// Target returns the target pointer, used as key for looking up registered flags.
-	Target() any
-	// IsBoolFlag returns true if the target points to a type with kind boolean.
-	IsBoolFlag() bool
-}
-
-// New constructs a new flag with a generic type as a target.
+// String constructs a new flag with a generic type as a target.
 // The Parser converts from the given string value to the target type.
 // If the given Parser is nil, falls back to implementation of TargetParser on type *T,
 // panics if nothing is found.
-func New[T any](target *T, parser Parser[T]) Value {
+// See also Bool and Slice.
+func String[T any](target *T, parser Parser[T]) Value {
 	result := anyValue[T]{target: target, parser: parser}
 	if parser == nil {
 		var ok bool

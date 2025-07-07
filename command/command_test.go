@@ -26,7 +26,7 @@ func TestNew(t *testing.T) {
 			someVal someType
 		)
 		cmd := New().
-			Flag(flag.New(&someVal, flag.NotEmptyTrimmed), flag.RegisterOptions{
+			Flag(flag.String(&someVal, flag.NotEmptyTrimmed), flag.RegisterOptions{
 				Name:      "some-val",
 				Shorthand: "p",
 			})
@@ -57,7 +57,7 @@ func TestNew(t *testing.T) {
 			someRequiredVal someType
 		)
 		cmd := New().
-			Flag(flag.New(&someRequiredVal, flag.NotEmptyTrimmed), flag.RegisterOptions{
+			Flag(flag.String(&someRequiredVal, flag.NotEmptyTrimmed), flag.RegisterOptions{
 				Name:     "some-required",
 				Required: true,
 			}).
@@ -185,7 +185,7 @@ func TestNew(t *testing.T) {
 			)
 			cmd := New().Flag(
 				binding.Viper{
-					Value:     flag.New(&someVal, flag.NotEmptyTrimmed),
+					Value:     flag.String(&someVal, flag.NotEmptyTrimmed),
 					ConfigKey: "SOME_VAL",
 				},
 				flag.RegisterOptions{
@@ -235,7 +235,7 @@ func TestNew(t *testing.T) {
 				).
 				Flag(
 					binding.Viper{
-						Value:     flag.New(&someBool, nil),
+						Value:     flag.String(&someBool, nil),
 						ConfigKey: "SOME_BOOL",
 					},
 					flag.RegisterOptions{Name: "some-bool"},

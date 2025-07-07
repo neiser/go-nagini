@@ -11,7 +11,7 @@ func Test_anyValue_Type(t *testing.T) {
 		var (
 			target string
 		)
-		sut := New(&target, NotEmptyTrimmed)
+		sut := String(&target, NotEmptyTrimmed)
 		assert.Equal(t, "string", sut.Type())
 	})
 	t.Run("custom type", func(t *testing.T) {
@@ -19,7 +19,7 @@ func Test_anyValue_Type(t *testing.T) {
 		var (
 			target someType
 		)
-		sut := New(&target, NotEmptyTrimmed)
+		sut := String(&target, NotEmptyTrimmed)
 		assert.Equal(t, "flag.someType", sut.Type())
 	})
 }

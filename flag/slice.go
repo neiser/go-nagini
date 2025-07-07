@@ -13,6 +13,7 @@ import (
 // Slice is constructed from NewSlice.
 // This interface explicitly declares that this is a pflag.SliceValue,
 // but it must also implement Value to make it registrable as a command flag.
+// See also String and Bool.
 type Slice interface {
 	Value
 	pflag.SliceValue

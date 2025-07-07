@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Parser is used in New to convert from string to the generic type T.
+// Parser is used in String to convert from string to the generic type T.
 // Note that this signature matches standard conversion functions, such as [strconv.Atoi].
 // Implementations of Parser may use ErrParser when an error occurs.
 type Parser[T any] func(s string) (T, error)
