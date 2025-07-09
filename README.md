@@ -240,6 +240,10 @@ or
 ```shell
 FAVORITE_HOUSE=Slytherin go run ./examples/viper --house Hufflepuff
 ```
+or 
+```shell
+IS_EVIL=true go run ./examples/viper secret-chamber
+```
 
 ### Marking groups of flags 
 

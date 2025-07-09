@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/neiser/go-nagini/flag"
-	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -18,11 +17,11 @@ type Viper struct {
 }
 
 // BindTo binds the flag of the command to a viper configuration value.
-func (v Viper) BindTo(cmd *cobra.Command, flag *pflag.Flag) {
+func (v Viper) BindTo() flag.Binder {
 	if v.ConfigKey == "" {
-		return
+		return nil
 	}
-	addToPreRunE(cmd, func(*cobra.Command, []string) error {
+	return func(flag *pflag.Flag) error {
 		// Check if viper has a config value before binding the flag,
 		// as otherwise the config value would always be reported as present
 		// (value source would then always be the bound flag)
@@ -40,7 +39,7 @@ func (v Viper) BindTo(cmd *cobra.Command, flag *pflag.Flag) {
 			return v.setValueFromViper()
 		}
 		return nil
-	})
+	}
 }
 
 func (v Viper) setValueFromViper() error {

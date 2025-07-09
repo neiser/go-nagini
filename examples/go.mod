@@ -3,7 +3,7 @@ module examples
 go 1.24
 
 require (
-	github.com/neiser/go-nagini v0.0.0-20250705105845-416981a75703
+	github.com/neiser/go-nagini v0.0.0-20250709105523-a56d945ada72
 	github.com/spf13/viper v1.20.1
 )
 
