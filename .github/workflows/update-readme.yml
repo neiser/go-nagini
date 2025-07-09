@@ -14,9 +14,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Convert tabs to spaces for README
+      - name: Convert tabs to spaces for README.md embedding
         run: find examples -type f -name "*.go" -exec sed -i 's/\t/  /g' {} +
 
-      - uses: kvankova/code-embedder@v1.1.2
+      - name: Run embed-code-in-markdown.pl
+        run: |
+          ./.github/workflows/embed-code-in-markdown.pl README.md
+          git add README.md
+          if git commit -m "Embedding code in README.md"; then
+            branchName=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
+            git push https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git "$branchName"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
