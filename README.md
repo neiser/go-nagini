@@ -67,7 +67,6 @@ func main() {
     }).
     Execute()
 }
-
 ```
 
 Run with
@@ -105,7 +104,6 @@ func main() {
     }).
     Execute()
 }
-
 ```
 
 Run with
@@ -173,7 +171,6 @@ func main() {
     }).
     Execute()
 }
-
 ```
 
 Run with
@@ -233,7 +230,6 @@ func main() {
     }).
     Execute()
 }
-
 ```
 
 Run with
@@ -286,7 +282,6 @@ func main() {
     }).
     Execute()
 }
-
 ```
 
 Run with
@@ -361,7 +356,6 @@ func main() {
     }).
     Execute()
 }
-
 ```
 
 Run with
