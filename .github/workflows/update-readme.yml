@@ -21,9 +21,9 @@ jobs:
         run: |
           ./.github/workflows/embed-code-in-markdown.pl README.md
           git add README.md
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
           if git commit -m "Embedding code in README.md"; then
             branchName=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
-            git push https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git "$branchName"
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY.git "$branchName"
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
