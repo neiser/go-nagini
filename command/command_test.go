@@ -21,6 +21,20 @@ func TestNew(t *testing.T) {
 		require.NoError(t, New().runTest(t, []string{}, nil))
 	})
 
+	t.Run("build command usage and description", func(t *testing.T) {
+		cmd := New().
+			Use("some use of cmd").
+			Short("some short description").
+			LongParagraph("a first paragraph").
+			Long("a longer sentence").
+			Long("another one").
+			LongParagraph("a second paragraph").
+			Long("last sentence")
+		assert.Equal(t, "some use of cmd", cmd.Command.Use)
+		assert.Equal(t, "some short description", cmd.Command.Short)
+		assert.Equal(t, "a first paragraph\na longer sentence\nanother one\n\na second paragraph\nlast sentence", cmd.Command.Long)
+	})
+
 	t.Run("add optional flag", func(t *testing.T) {
 		var (
 			someVal someType
@@ -179,19 +193,34 @@ func TestNew(t *testing.T) {
 	t.Run("viper binding", func(t *testing.T) {
 		viper.AutomaticEnv()
 
-		t.Run("scalar value", func(t *testing.T) {
+		t.Run("scalar value, persistent pre run", func(t *testing.T) {
 			var (
-				someVal string
+				someVal           string
+				persistentPreRun1 int
+				persistentPreRun2 int
 			)
-			cmd := New().Flag(
-				binding.Viper{
-					Value:     flag.String(&someVal, flag.NotEmptyTrimmed),
-					ConfigKey: "SOME_VAL",
-				},
-				flag.RegisterOptions{
-					Name: "some-val",
-				},
-			)
+			cmd := New().
+				AddPersistentPreRun(func() error {
+					persistentPreRun1++
+					if persistentPreRun1 == 5 {
+						return errors.New("some error")
+					}
+					return nil
+				}).
+				AddPersistentPreRun(func() error {
+					persistentPreRun2++
+					return nil
+				}).
+				Flag(
+					binding.Viper{
+						Value:     flag.String(&someVal, flag.NotEmptyTrimmed),
+						ConfigKey: "SOME_VAL",
+					},
+					flag.RegisterOptions{
+						Name:       "some-val",
+						Persistent: true,
+					},
+				)
 
 			// sub testcases modify state of someVal, so run the "not set" case first
 
@@ -199,6 +228,16 @@ func TestNew(t *testing.T) {
 				require.NoError(t, cmd.runTest(t, []string{}, func() {
 					require.Empty(t, someVal)
 				}))
+			})
+
+			t.Setenv("SOME_VAL", "\t  \t")
+
+			t.Run("flag not set, but env set to whitespace", func(t *testing.T) {
+				require.ErrorContains(t, cmd.Run(func() error {
+					return nil
+				}).runTestWithArgs(t, []string{}, func(exitCode int) {
+					require.Equal(t, 1, exitCode)
+				}), "cannot set value to viper config SOME_VAL")
 			})
 
 			t.Setenv("SOME_VAL", "value-from-env")
@@ -214,6 +253,17 @@ func TestNew(t *testing.T) {
 					require.Equal(t, "blabla", someVal)
 				}))
 			})
+
+			require.ErrorContains(t, cmd.Run(func() error {
+				// do nothing, run won't be called due to error in pre-run hook
+				t.Fatal("should never be called")
+				return nil
+			}).runTestWithArgs(t, []string{}, func(exitCode int) {
+				require.Equal(t, 1, exitCode)
+			}), "some error")
+
+			require.Equal(t, 5, persistentPreRun1)
+			require.Equal(t, 4, persistentPreRun2)
 		})
 
 		t.Run("slice of ints", func(t *testing.T) {

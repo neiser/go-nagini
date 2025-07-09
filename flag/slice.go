@@ -98,8 +98,13 @@ func (v anySliceValue[T, E]) Type() string {
 	return "[]" + reflect.TypeOf(t).Name()
 }
 
-func (v anySliceValue[T, E]) Append(s string) error {
-	added, err := v.parser([]string{s})
+//nolint:wrapcheck
+func (v anySliceValue[T, E]) Append(s string) (err error) {
+	var added []T
+	if v.targetParser != nil {
+		return v.targetParser.ParseAndAppend(s)
+	}
+	added, err = v.parser([]string{s})
 	if err != nil {
 		return err
 	}
@@ -110,7 +115,7 @@ func (v anySliceValue[T, E]) Append(s string) error {
 //nolint:wrapcheck
 func (v anySliceValue[T, E]) Replace(ss []string) (err error) {
 	if v.targetParser != nil {
-		return v.targetParser.Parse(ss)
+		return v.targetParser.ParseAndReplace(ss)
 	}
 	*v.target, err = v.parser(ss)
 	return

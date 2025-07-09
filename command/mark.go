@@ -23,7 +23,7 @@ func (c Command) getFlagNames(targets []any) (result []string) {
 	for _, target := range targets {
 		flagNames, found := c.flagNames[getPointerValue(target)]
 		if !found {
-			panic(fmt.Sprintf("cannot find flag names for target %p=%+v", target, target))
+			panic("cannot find flag names for target pointer, did you register with Flag(...) first?")
 		}
 		result = append(result, flagNames...)
 	}

@@ -51,7 +51,8 @@ type SliceParser[T any] func(ss []string) ([]T, error)
 // SliceTargetParser can be implemented by given target pointers
 // Implementations of SliceTargetParser may use ErrParser when an error occurs.
 type SliceTargetParser interface {
-	Parse(ss []string) error
+	ParseAndReplace(ss []string) error
+	ParseAndAppend(ss ...string) error
 }
 
 // ParseSliceOf turns a Parser into a SliceParser, calling the given single element parser for each slice element.

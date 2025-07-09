@@ -23,3 +23,21 @@ func Test_anyValue_Type(t *testing.T) {
 		assert.Equal(t, "flag.someType", sut.Type())
 	})
 }
+
+type someStringer string
+
+func (s someStringer) String() string {
+	return "prefix " + string(s)
+}
+
+func Test_convertToString(t *testing.T) {
+	t.Run("use format bool", func(t *testing.T) {
+		assert.Equal(t, "true", convertToString(true))
+	})
+	t.Run("use format string", func(t *testing.T) {
+		assert.Equal(t, "foo", convertToString("foo"))
+	})
+	t.Run("use fmt.Stringer interface", func(t *testing.T) {
+		assert.Equal(t, "prefix foo", convertToString(someStringer("foo")))
+	})
+}
