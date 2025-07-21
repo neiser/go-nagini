@@ -29,7 +29,6 @@ type anyValue[T any] struct {
 	targetParser TargetParser
 }
 
-//nolint:ireturn
 func (v anyValue[T]) Target() any {
 	return v.target
 }

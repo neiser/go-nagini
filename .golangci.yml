@@ -6,6 +6,7 @@ linters:
   default: all
   disable:
     - exhaustruct
+    - ireturn
     - nestif
     - nlreturn
     - noinlineerr
@@ -58,9 +59,3 @@ linters:
             - github.com/neiser/go-nagini/command$
             - github.com/neiser/go-nagini/flag$
             - github.com/neiser/go-nagini/flag/binding$
-    ireturn:
-      allow:
-        - flag.Value$
-        - flag.Slice$
-        - error
-        - generic

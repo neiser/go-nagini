@@ -41,7 +41,6 @@ type anySliceValue[T any, E ~[]T] struct {
 	targetParser SliceTargetParser
 }
 
-//nolint:ireturn
 func (v anySliceValue[T, E]) Target() any {
 	return v.target
 }
