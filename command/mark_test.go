@@ -39,9 +39,9 @@ func TestCommand_MarkFlagsRequiredTogether(t *testing.T) {
 		})
 	cmd.captureCobraOutput(t) // avoid confusing test output
 	t.Run("one flag missing", func(t *testing.T) {
-		require.ErrorContains(t, cmd.runTestWithArgs(t, []string{"--flag1=false"}, func(exitCode int) {
+		require.ErrorContains(t, cmd.runTestWithArgs(t, []string{"--flag1=false"}, WithExiter(func(exitCode int) {
 			require.Equal(t, 1, exitCode)
-		}), "if any flags in the group [flag1 flag2] are set they must all be set; missing [flag2]")
+		})), "if any flags in the group [flag1 flag2] are set they must all be set; missing [flag2]")
 		require.False(t, flag1)
 		require.False(t, flag2)
 	})
@@ -67,9 +67,9 @@ func TestCommand_MarkFlagsOneRequired(t *testing.T) {
 		})
 	cmd.captureCobraOutput(t) // avoid confusing test output
 	t.Run("no flags provided", func(t *testing.T) {
-		require.ErrorContains(t, cmd.runTestWithArgs(t, []string{}, func(exitCode int) {
+		require.ErrorContains(t, cmd.runTestWithArgs(t, []string{}, WithExiter(func(exitCode int) {
 			require.Equal(t, 1, exitCode)
-		}), "at least one of the flags in the group [flag1 flag2] is required")
+		})), "at least one of the flags in the group [flag1 flag2] is required")
 		require.False(t, flag1)
 		require.False(t, flag2)
 	})
@@ -101,9 +101,9 @@ func TestCommand_MarkFlagsMutuallyExclusive(t *testing.T) {
 		}))
 	})
 	t.Run("both flags provided", func(t *testing.T) {
-		require.ErrorContains(t, cmd.runTestWithArgs(t, []string{"--flag1", "--flag2"}, func(exitCode int) {
+		require.ErrorContains(t, cmd.runTestWithArgs(t, []string{"--flag1", "--flag2"}, WithExiter(func(exitCode int) {
 			require.Equal(t, 1, exitCode)
-		}), "if any flags in the group [flag1 flag2] are set none of the others can be; [flag1 flag2] were all set")
+		})), "if any flags in the group [flag1 flag2] are set none of the others can be; [flag1 flag2] were all set")
 		require.True(t, flag1)
 		require.True(t, flag2)
 	})

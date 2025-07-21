@@ -2,17 +2,10 @@ package command
 
 import (
 	"fmt"
-	"log"
 )
 
-// ErrorLogger is used to log a  command execution error. See Command.Execute.
-//
-//nolint:gochecknoglobals
-var ErrorLogger = func(err error) {
-	log.Printf("Command failed: %s", err.Error())
-}
-
-// WithExitCodeError allows to set an exit code for that error. See Command.Execute.
+// WithExitCodeError allows to set an exit code for that error.
+// See Command.Execute.
 type WithExitCodeError struct {
 	ExitCode int
 	Wrapped  error

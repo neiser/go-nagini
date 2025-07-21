@@ -2,10 +2,6 @@
 package command
 
 import (
-	"errors"
-	"os"
-	"strings"
-
 	"github.com/neiser/go-nagini/flag"
 	"github.com/spf13/cobra"
 )
@@ -57,14 +53,6 @@ func (c Command) LongParagraph(paragraph string) Command {
 	return c.long(paragraph, "\n\n")
 }
 
-// long is internally used by Long and LongParagraph.
-//
-//nolint:funcorder
-func (c Command) long(add, sep string) Command {
-	c.Command.Long = strings.TrimSpace(strings.Join([]string{c.Command.Long, add}, sep))
-	return c
-}
-
 // Flag registers a new flag.
 // Use [flag.String], [flag.Bool] or [flag.Slice] to construct one and set appropriate [flag.RegisterOptions].
 // The given param might implement [flag.Binding].
@@ -98,60 +86,4 @@ func (c Command) Run(run func() error) Command {
 func (c Command) AddPersistentPreRun(run func() error) Command {
 	c.addToPersistentPreRunE(wrapRunCallbackError(run))
 	return c
-}
-
-func wrapRunCallbackError(run func() error) func(*cobra.Command, []string) error {
-	return func(*cobra.Command, []string) error {
-		if err := run(); err != nil {
-			return fromRunCallbackError{err}
-		}
-		return nil
-	}
-}
-
-//nolint:funcorder
-func (c Command) addToPersistentPreRunE(action func(*cobra.Command, []string) error) {
-	// important to catch existing as local variable,
-	// as otherwise chaining the action callbacks leads to a stack overflow
-	if existing := c.PersistentPreRunE; existing != nil {
-		c.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-			if err := existing(cmd, args); err != nil {
-				return err
-			}
-			return action(cmd, args)
-		}
-	} else {
-		c.PersistentPreRunE = action
-	}
-}
-
-// Execute executes the command using cobra and takes care of error handling.
-// Note: This function never returns.
-func (c Command) Execute() {
-	_ = c.execute(os.Exit)
-	panic("never returns")
-}
-
-func (c Command) execute(exiter func(exitCode int)) (err error) {
-	err = c.Command.Execute()
-	if err != nil {
-		exitCode := 1
-		var errFromRunCallback fromRunCallbackError
-		if errors.As(err, &errFromRunCallback) {
-			var errWithExitCode WithExitCodeError
-			if errors.As(err, &errWithExitCode) {
-				exitCode = errWithExitCode.ExitCode
-			}
-			ErrorLogger(errFromRunCallback.Wrapped)
-		} else {
-			// see cobra.Execute implementation, this mimics the behavior as if
-			// SilenceErrors and SilenceUsage were false.
-			c.PrintErrln(c.ErrPrefix(), err.Error())
-			c.Println(c.UsageString())
-		}
-		exiter(exitCode)
-	} else {
-		exiter(0)
-	}
-	return
 }
