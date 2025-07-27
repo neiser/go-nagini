@@ -1,9 +1,7 @@
 package command
 
 import (
-	"bytes"
 	"errors"
-	"os"
 	"strconv"
 	"testing"
 
@@ -48,21 +46,30 @@ func TestNew(t *testing.T) {
 		// sub testcases modify state of someVal, so run the "not set" case first
 
 		t.Run("optional string flag not set", func(t *testing.T) {
-			require.NoError(t, cmd.runTest(t, []string{}, func() {
-				require.Empty(t, someVal)
-			}))
+			require.NoError(t, cmd.Execute(WithArgs(),
+				AssertExitCode(t, 0),
+				AssertWithRun(t, func() {
+					require.Empty(t, someVal)
+				})),
+			)
 		})
 
 		t.Run("optional string flag set", func(t *testing.T) {
-			require.NoError(t, cmd.runTest(t, []string{"--some-val", "bla"}, func() {
-				require.Equal(t, someType("bla"), someVal)
-			}))
+			require.NoError(t, cmd.Execute(WithArgs("--some-val", "bla"),
+				AssertExitCode(t, 0),
+				AssertWithRun(t, func() {
+					require.Equal(t, someType("bla"), someVal)
+				}),
+			))
 		})
 
 		t.Run("optional string flag set with shorthand", func(t *testing.T) {
-			require.NoError(t, cmd.runTest(t, []string{"-p", "blabla"}, func() {
-				require.Equal(t, someType("blabla"), someVal)
-			}))
+			require.NoError(t, cmd.Execute(WithArgs("-p", "blabla"),
+				AssertExitCode(t, 0),
+				AssertWithRun(t, func() {
+					require.Equal(t, someType("blabla"), someVal)
+				}),
+			))
 		})
 	})
 
@@ -82,7 +89,7 @@ func TestNew(t *testing.T) {
 		// sub testcases modify state of someRequiredVal, so run the "not set" case first
 
 		t.Run("param not set", func(t *testing.T) {
-			getStdout, getStderr := cmd.captureCobraOutput(t)
+			getStdout, getStderr := cmd.CaptureCobraOutput(t)
 
 			err := cmd.Execute(WithArgs(), AssertExitCode(t, 1))
 
@@ -92,9 +99,12 @@ func TestNew(t *testing.T) {
 		})
 
 		t.Run("param set", func(t *testing.T) {
-			require.NoError(t, cmd.runTest(t, []string{"--some-required", "bla"}, func() {
-				require.Equal(t, someType("bla"), someRequiredVal)
-			}))
+			require.NoError(t, cmd.Execute(WithArgs("--some-required", "bla"),
+				AssertExitCode(t, 0),
+				AssertWithRun(t, func() {
+					require.Equal(t, someType("bla"), someRequiredVal)
+				}),
+			))
 		})
 	})
 
@@ -109,9 +119,12 @@ func TestNew(t *testing.T) {
 			Run(func() error {
 				return nil // dummy to make this cmd runnable
 			})
-		require.NoError(t, cmd.runTest(t, []string{"--some-bool"}, func() {
-			require.True(t, someBool)
-		}))
+		require.NoError(t, cmd.Execute(WithArgs("--some-bool"),
+			AssertExitCode(t, 0),
+			AssertWithRun(t, func() {
+				require.True(t, someBool)
+			}),
+		))
 	})
 
 	t.Run("error handling and propagation", func(t *testing.T) {
@@ -120,7 +133,7 @@ func TestNew(t *testing.T) {
 			cmd := New().Run(func() error {
 				return someError
 			})
-			getCobraStdout, getCobraStderr := cmd.captureCobraOutput(t)
+			getCobraStdout, getCobraStderr := cmd.CaptureCobraOutput(t)
 			var capturedError error
 
 			err := cmd.Execute(WithArgs(),
@@ -159,7 +172,7 @@ func TestNew(t *testing.T) {
 				}),
 			)
 		t.Run("no subcommand", func(t *testing.T) {
-			getStdout, getStderr := cmd.captureCobraOutput(t)
+			getStdout, getStderr := cmd.CaptureCobraOutput(t)
 			require.NoError(t, cmd.Execute(WithArgs(), WithExiter(func(exitCode int) {
 				assert.Equal(t, 0, exitCode)
 			})))
@@ -171,7 +184,7 @@ func TestNew(t *testing.T) {
 		})
 
 		t.Run("run sub1", func(t *testing.T) {
-			getStdout, getStderr := cmd.captureCobraOutput(t)
+			getStdout, getStderr := cmd.CaptureCobraOutput(t)
 			var capturedError error
 			err := cmd.Execute(
 				WithArgs("sub1"),
@@ -189,7 +202,7 @@ func TestNew(t *testing.T) {
 		})
 
 		t.Run("run sub2", func(t *testing.T) {
-			getStdout, getStderr := cmd.captureCobraOutput(t)
+			getStdout, getStderr := cmd.CaptureCobraOutput(t)
 			var capturedError error
 			err := cmd.Execute(
 				WithArgs("sub2"),
@@ -242,9 +255,12 @@ func TestNew(t *testing.T) {
 			// sub testcases modify state of someVal, so run the "not set" case first
 
 			t.Run("flag not set, env not set", func(t *testing.T) {
-				require.NoError(t, cmd.runTest(t, []string{}, func() {
-					require.Empty(t, someVal)
-				}))
+				require.NoError(t, cmd.Execute(WithArgs(),
+					AssertExitCode(t, 0),
+					AssertWithRun(t, func() {
+						require.Empty(t, someVal)
+					}),
+				))
 			})
 
 			t.Setenv("SOME_VAL", "\t  \t")
@@ -262,15 +278,21 @@ func TestNew(t *testing.T) {
 			t.Setenv("SOME_VAL", "value-from-env")
 
 			t.Run("flag not set, but env set", func(t *testing.T) {
-				require.NoError(t, cmd.runTest(t, []string{}, func() {
-					require.Equal(t, "value-from-env", someVal)
-				}))
+				require.NoError(t, cmd.Execute(WithArgs(),
+					AssertExitCode(t, 0),
+					AssertWithRun(t, func() {
+						require.Equal(t, "value-from-env", someVal)
+					}),
+				))
 			})
 
 			t.Run("flag is preferred over env", func(t *testing.T) {
-				require.NoError(t, cmd.runTest(t, []string{"--some-val", "blabla"}, func() {
-					require.Equal(t, "blabla", someVal)
-				}))
+				require.NoError(t, cmd.Execute(WithArgs("--some-val", "blabla"),
+					AssertExitCode(t, 0),
+					AssertWithRun(t, func() {
+						require.Equal(t, "blabla", someVal)
+					}),
+				))
 			})
 
 			require.ErrorContains(t, cmd.Run(func() error {
@@ -317,16 +339,19 @@ func TestNew(t *testing.T) {
 			// sub testcases modify state of someInts, so run the "not set" case first
 
 			t.Run("flag not set, env not set", func(t *testing.T) {
-				require.NoError(t, cmd.runTest(t, []string{}, func() {
-					require.Empty(t, someInts)
-					require.True(t, bool(someBool))
-				}))
+				require.NoError(t, cmd.Execute(WithArgs(),
+					AssertExitCode(t, 0),
+					AssertWithRun(t, func() {
+						require.Empty(t, someInts)
+						require.True(t, bool(someBool))
+					}),
+				))
 			})
 
 			t.Setenv("SOME_INTEGERS", "2,x3x,4")
 
 			t.Run("env parsing fails, help message properly shown", func(t *testing.T) {
-				getStdout, getStderr := cmd.captureCobraOutput(t)
+				getStdout, getStderr := cmd.CaptureCobraOutput(t)
 				require.ErrorContains(t, cmd.Execute(WithArgs(), WithExiter(func(exitCode int) {
 					require.Equal(t, 1, exitCode)
 				})), `cannot replace slice value to viper config SOME_INTEGERS='[2 x3x 4]': cannot parse slice element 1: strconv.Atoi: parsing "x3x": invalid syntax`)
@@ -340,59 +365,33 @@ func TestNew(t *testing.T) {
 			t.Setenv("SOME_BOOL", "no")
 
 			t.Run("flag not set, but env set", func(t *testing.T) {
-				require.NoError(t, cmd.runTest(t, []string{}, func() {
-					require.Equal(t, sliceOfInts{2, 3, 4}, someInts)
-					require.False(t, bool(someBool))
-				}))
+				require.NoError(t, cmd.Execute(WithArgs(),
+					AssertExitCode(t, 0),
+					AssertWithRun(t, func() {
+						require.Equal(t, sliceOfInts{2, 3, 4}, someInts)
+						require.False(t, bool(someBool))
+					}),
+				))
 			})
 
 			t.Run("flag is preferred over env", func(t *testing.T) {
-				require.NoError(t, cmd.runTest(t, []string{"--some-ints", "5,6,7", "--some-bool=yes"}, func() {
-					require.Equal(t, sliceOfInts{5, 6, 7}, someInts)
-					require.True(t, bool(someBool))
-				}))
+				require.NoError(t, cmd.Execute(WithArgs("--some-ints", "5,6,7", "--some-bool=yes"),
+					AssertExitCode(t, 0),
+					AssertWithRun(t, func() {
+						require.Equal(t, sliceOfInts{5, 6, 7}, someInts)
+						require.True(t, bool(someBool))
+					}),
+				))
 			})
 
 			t.Run("flag parsing fails", func(t *testing.T) {
-				cmd.captureCobraOutput(t) // just to silence confusing error output during tests
+				cmd.CaptureCobraOutput(t) // just to silence confusing error output during tests
 				require.ErrorContains(t, cmd.Execute(WithArgs("--some-ints", "5,x6x,7"), WithExiter(func(exitCode int) {
 					require.Equal(t, 1, exitCode)
 				})), `invalid argument "5,x6x,7" for "--some-ints" flag: cannot parse slice element 1: strconv.Atoi: parsing "x6x": invalid syntax`)
 			})
 		})
 	})
-}
-
-func (c Command) runTest(t *testing.T, args []string, onRun func()) error {
-	t.Helper()
-	haveRun := false
-	c.Run(func() error {
-		haveRun = true
-		if onRun != nil {
-			onRun()
-		}
-		return nil
-	})
-
-	err := c.Execute(
-		WithArgs(args...),
-		AssertExitCode(t, 0),
-	)
-	assert.True(t, haveRun)
-	return err
-}
-
-func (c Command) captureCobraOutput(t *testing.T) (getStdout, getStderr func() string) {
-	t.Helper()
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	c.SetOut(&stdout)
-	c.SetErr(&stderr)
-	t.Cleanup(func() {
-		c.SetOut(os.Stdout)
-		c.SetErr(os.Stderr)
-	})
-	return stdout.String, stderr.String
 }
 
 type yesOrNoType bool

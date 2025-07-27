@@ -37,20 +37,26 @@ func TestCommand_MarkFlagsRequiredTogether(t *testing.T) {
 			// some dummy to make Cobra actually parse flags
 			return nil
 		})
-	cmd.captureCobraOutput(t) // avoid confusing test output
+	cmd.CaptureCobraOutput(t) // avoid confusing test output
 	t.Run("one flag missing", func(t *testing.T) {
 		require.ErrorContains(t,
-			cmd.Execute(WithArgs("--flag1=false"), AssertExitCode(t, 1)),
+			cmd.Execute(
+				WithArgs("--flag1=false"),
+				AssertExitCode(t, 1),
+			),
 			"if any flags in the group [flag1 flag2] are set they must all be set; missing [flag2]",
 		)
 		require.False(t, flag1)
 		require.False(t, flag2)
 	})
 	t.Run("both flags provided", func(t *testing.T) {
-		require.NoError(t, cmd.runTest(t, []string{"--flag1", "--flag2"}, func() {
-			require.True(t, flag1)
-			require.True(t, flag2)
-		}))
+		require.NoError(t, cmd.Execute(WithArgs("--flag1", "--flag2"),
+			AssertExitCode(t, 0),
+			AssertWithRun(t, func() {
+				require.True(t, flag1)
+				require.True(t, flag2)
+			}),
+		))
 	})
 }
 
@@ -66,7 +72,7 @@ func TestCommand_MarkFlagsOneRequired(t *testing.T) {
 			// some dummy to make Cobra actually parse flags
 			return nil
 		})
-	cmd.captureCobraOutput(t) // avoid confusing test output
+	cmd.CaptureCobraOutput(t) // avoid confusing test output
 	t.Run("no flags provided", func(t *testing.T) {
 		require.ErrorContains(t,
 			cmd.Execute(WithArgs(), AssertExitCode(t, 1)),
@@ -76,10 +82,13 @@ func TestCommand_MarkFlagsOneRequired(t *testing.T) {
 		require.False(t, flag2)
 	})
 	t.Run("one flag provided", func(t *testing.T) {
-		require.NoError(t, cmd.runTest(t, []string{"--flag1"}, func() {
-			require.True(t, flag1)
-			require.False(t, flag2)
-		}))
+		require.NoError(t, cmd.Execute(WithArgs("--flag1"),
+			AssertExitCode(t, 0),
+			AssertWithRun(t, func() {
+				require.True(t, flag1)
+				require.False(t, flag2)
+			}),
+		))
 	})
 }
 
@@ -95,12 +104,16 @@ func TestCommand_MarkFlagsMutuallyExclusive(t *testing.T) {
 			// some dummy to make Cobra actually parse flags
 			return nil
 		})
-	cmd.captureCobraOutput(t) // avoid confusing test output
+	cmd.CaptureCobraOutput(t) // avoid confusing test output
 	t.Run("one flag provided", func(t *testing.T) {
-		require.NoError(t, cmd.runTest(t, []string{"--flag1"}, func() {
-			require.True(t, flag1)
-			require.False(t, flag2)
-		}))
+		require.NoError(t, cmd.Execute(
+			AssertExitCode(t, 0),
+			WithArgs("--flag1"),
+			AssertWithRun(t, func() {
+				require.True(t, flag1)
+				require.False(t, flag2)
+			}),
+		))
 	})
 	t.Run("both flags provided", func(t *testing.T) {
 		require.ErrorContains(t,
