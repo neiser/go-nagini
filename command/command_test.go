@@ -17,8 +17,8 @@ import (
 func TestNew(t *testing.T) {
 	type someType string
 
-	t.Run("build simple command and run it", func(t *testing.T) {
-		require.NoError(t, New().runTest(t, []string{}, nil))
+	t.Run("build simple command and execute it", func(t *testing.T) {
+		require.NoError(t, New().Execute(WithArgs(), AssertExitCode(t, 0)))
 	})
 
 	t.Run("build command usage and description", func(t *testing.T) {
@@ -84,9 +84,7 @@ func TestNew(t *testing.T) {
 		t.Run("param not set", func(t *testing.T) {
 			getStdout, getStderr := cmd.captureCobraOutput(t)
 
-			err := cmd.runTestWithArgs(t, []string{}, WithExiter(func(exitCode int) {
-				assert.Equal(t, 1, exitCode)
-			}))
+			err := cmd.Execute(WithArgs(), AssertExitCode(t, 1))
 
 			require.ErrorContains(t, err, `required flag(s) "some-required" not set`)
 			assert.Contains(t, getStdout(), "Usage:")
@@ -125,7 +123,7 @@ func TestNew(t *testing.T) {
 			getCobraStdout, getCobraStderr := cmd.captureCobraOutput(t)
 			var capturedError error
 
-			err := cmd.runTestWithArgs(t, []string{},
+			err := cmd.Execute(WithArgs(),
 				WithExiter(func(exitCode int) {
 					assert.Equal(t, 1, exitCode)
 				}),
@@ -143,7 +141,7 @@ func TestNew(t *testing.T) {
 			cmd := New().Run(func() error {
 				return WithExitCodeError{42, someError}
 			})
-			err := cmd.runTestWithArgs(t, []string{}, WithExiter(func(exitCode int) {
+			err := cmd.Execute(WithArgs(), WithExiter(func(exitCode int) {
 				assert.Equal(t, 42, exitCode)
 			}))
 			require.ErrorIs(t, err, someError)
@@ -162,7 +160,7 @@ func TestNew(t *testing.T) {
 			)
 		t.Run("no subcommand", func(t *testing.T) {
 			getStdout, getStderr := cmd.captureCobraOutput(t)
-			require.NoError(t, cmd.runTestWithArgs(t, []string{}, WithExiter(func(exitCode int) {
+			require.NoError(t, cmd.Execute(WithArgs(), WithExiter(func(exitCode int) {
 				assert.Equal(t, 0, exitCode)
 			})))
 			stdout := getStdout()
@@ -175,7 +173,8 @@ func TestNew(t *testing.T) {
 		t.Run("run sub1", func(t *testing.T) {
 			getStdout, getStderr := cmd.captureCobraOutput(t)
 			var capturedError error
-			err := cmd.runTestWithArgs(t, []string{"sub1"},
+			err := cmd.Execute(
+				WithArgs("sub1"),
 				WithExiter(func(exitCode int) {
 					assert.Equal(t, 42, exitCode)
 				}),
@@ -192,7 +191,8 @@ func TestNew(t *testing.T) {
 		t.Run("run sub2", func(t *testing.T) {
 			getStdout, getStderr := cmd.captureCobraOutput(t)
 			var capturedError error
-			err := cmd.runTestWithArgs(t, []string{"sub2"},
+			err := cmd.Execute(
+				WithArgs("sub2"),
 				WithExiter(func(exitCode int) {
 					assert.Equal(t, 43, exitCode)
 				}),
@@ -252,9 +252,11 @@ func TestNew(t *testing.T) {
 			t.Run("flag not set, but env set to whitespace", func(t *testing.T) {
 				require.ErrorContains(t, cmd.Run(func() error {
 					return nil
-				}).runTestWithArgs(t, []string{}, WithExiter(func(exitCode int) {
-					require.Equal(t, 1, exitCode)
-				})), "cannot set value to viper config SOME_VAL")
+				}).Execute(
+					WithArgs(),
+					WithExiter(func(exitCode int) {
+						require.Equal(t, 1, exitCode)
+					})), "cannot set value to viper config SOME_VAL")
 			})
 
 			t.Setenv("SOME_VAL", "value-from-env")
@@ -275,7 +277,7 @@ func TestNew(t *testing.T) {
 				// do nothing, run won't be called due to error in pre-run hook
 				t.Fatal("should never be called")
 				return nil
-			}).runTestWithArgs(t, []string{}, WithExiter(func(exitCode int) {
+			}).Execute(WithArgs(), WithExiter(func(exitCode int) {
 				require.Equal(t, 1, exitCode)
 			})), "some error")
 
@@ -325,7 +327,7 @@ func TestNew(t *testing.T) {
 
 			t.Run("env parsing fails, help message properly shown", func(t *testing.T) {
 				getStdout, getStderr := cmd.captureCobraOutput(t)
-				require.ErrorContains(t, cmd.runTestWithArgs(t, []string{}, WithExiter(func(exitCode int) {
+				require.ErrorContains(t, cmd.Execute(WithArgs(), WithExiter(func(exitCode int) {
 					require.Equal(t, 1, exitCode)
 				})), `cannot replace slice value to viper config SOME_INTEGERS='[2 x3x 4]': cannot parse slice element 1: strconv.Atoi: parsing "x3x": invalid syntax`)
 				assert.Contains(t, getStderr(), "Error: cannot replace slice value to viper config")
@@ -353,7 +355,7 @@ func TestNew(t *testing.T) {
 
 			t.Run("flag parsing fails", func(t *testing.T) {
 				cmd.captureCobraOutput(t) // just to silence confusing error output during tests
-				require.ErrorContains(t, cmd.runTestWithArgs(t, []string{"--some-ints", "5,x6x,7"}, WithExiter(func(exitCode int) {
+				require.ErrorContains(t, cmd.Execute(WithArgs("--some-ints", "5,x6x,7"), WithExiter(func(exitCode int) {
 					require.Equal(t, 1, exitCode)
 				})), `invalid argument "5,x6x,7" for "--some-ints" flag: cannot parse slice element 1: strconv.Atoi: parsing "x6x": invalid syntax`)
 			})
@@ -364,10 +366,6 @@ func TestNew(t *testing.T) {
 func (c Command) runTest(t *testing.T, args []string, onRun func()) error {
 	t.Helper()
 	haveRun := false
-	previousRunE := c.RunE
-	t.Cleanup(func() {
-		c.RunE = previousRunE
-	})
 	c.Run(func() error {
 		haveRun = true
 		if onRun != nil {
@@ -376,17 +374,12 @@ func (c Command) runTest(t *testing.T, args []string, onRun func()) error {
 		return nil
 	})
 
-	err := c.runTestWithArgs(t, args, WithExiter(func(exitCode int) {
-		assert.Equal(t, 0, exitCode, "exit code should be zero")
-	}))
+	err := c.Execute(
+		WithArgs(args...),
+		AssertExitCode(t, 0),
+	)
 	assert.True(t, haveRun)
 	return err
-}
-
-func (c Command) runTestWithArgs(t *testing.T, args []string, options ...ExecuteOption) error {
-	t.Helper()
-	c.SetArgs(args)
-	return c.Execute(options...)
 }
 
 func (c Command) captureCobraOutput(t *testing.T) (getStdout, getStderr func() string) {

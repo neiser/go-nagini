@@ -37,6 +37,7 @@ linters:
           files:
             - '**/*.go'
             - '!$test'
+            - '!**/testing.go'
             - '!**/flag/binding/*.go'
             - '!**/examples/viper/*.go'
           allow:
@@ -45,6 +46,13 @@ linters:
             - github.com/spf13/pflag$
             - github.com/neiser/go-nagini/command$
             - github.com/neiser/go-nagini/flag$
+        testing:
+          list-mode: strict
+          files:
+            - '**/testing.go'
+          allow:
+            - $gostd
+            - github.com/stretchr/testify/assert$
         binding:
           list-mode: strict
           files:

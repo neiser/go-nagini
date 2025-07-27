@@ -10,6 +10,8 @@ import (
 // By default, exits the application with proper exit code and never returns.
 // By default, logs an error originating from Run callback execution using [log.Printf].
 // See  WithExiter and WithErrorLogger to change this default behavior (which can be useful for testing).
+//
+//nolint:wrapcheck
 func (c Command) Execute(options ...ExecuteOption) (err error) {
 	opts := executeOptions{
 		Exiter: os.Exit,
@@ -18,6 +20,9 @@ func (c Command) Execute(options ...ExecuteOption) (err error) {
 		},
 	}.apply(options)
 
+	if opts.Args != nil {
+		c.SetArgs(opts.Args)
+	}
 	err = c.Command.Execute()
 
 	if err != nil {
@@ -39,11 +44,25 @@ func (c Command) Execute(options ...ExecuteOption) (err error) {
 	} else {
 		opts.Exiter(0)
 	}
-	return
+	return err
 }
 
 // ExecuteOption is given to Command.Execute for modifying the default executeOptions.
 type ExecuteOption func(options *executeOptions)
+
+// WithArgs sets the used arguments before the command is executed.
+// Providing this ExecuteOption without any arguments has the effect that [os.Args] is not considered by Cobra,
+// which is useful for tests.
+func WithArgs(args ...string) ExecuteOption {
+	return func(options *executeOptions) {
+		// when called with zero arguments,
+		// explicitly set empty args array to make Cobra ignore os.Args (see above).
+		if args == nil {
+			args = []string{}
+		}
+		options.Args = args
+	}
+}
 
 // WithExiter sets a different exit function.
 // The default is [os.Exit] which makes Command.Execute never return.
@@ -62,8 +81,9 @@ func WithErrorLogger(logger func(err error)) ExecuteOption {
 }
 
 // executeOptions are options for running Command.Execute.
-// Use WithExiter and WithErrorLogger.
+// Use WithArgs, WithExiter, WithErrorLogger.
 type executeOptions struct {
+	Args        []string
 	Exiter      func(exitCode int)
 	ErrorLogger func(err error)
 }
