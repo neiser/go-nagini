@@ -1,6 +1,6 @@
 module github.com/neiser/go-nagini
 
-go 1.21.0
+go 1.23
 
 toolchain go1.24.5
 

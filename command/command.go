@@ -2,6 +2,8 @@
 package command
 
 import (
+	"iter"
+
 	"github.com/neiser/go-nagini/flag"
 	"github.com/spf13/cobra"
 )
@@ -14,6 +16,16 @@ import (
 type Command struct {
 	*cobra.Command
 
+	// commands holds the subcommands added via AddCommands below.
+	// Uses a pointer to slice to enable Command value modification during AddCommands.
+	// New ensures that the pointer-to-pointer is never nil.
+	commands *[]Command
+	// parent points to pointer of the parent if added via AddCommands below.
+	// Otherwise, points to a nil value.
+	// Uses a pointer to slice to enable Command value modification during AddCommands.
+	// New ensures that the pointer-to-pointer is never nil.
+	parent **Command
+
 	// flagNames holds the registered flag names for a command,
 	// identified by the target pointer as the map key.
 	flagNames map[uintptr][]string
@@ -21,12 +33,16 @@ type Command struct {
 
 // New constructs a command.
 func New() Command {
+	var noParent *Command
+	var noCommands []Command
 	return Command{
 		&cobra.Command{
 			// We do our own usage output in Command.Execute below.
 			SilenceErrors: true,
 			SilenceUsage:  true,
 		},
+		&noCommands,
+		&noParent,
 		map[uintptr][]string{},
 	}
 }
@@ -69,6 +85,8 @@ func (c Command) Flag(flagValue flag.Value, options flag.RegisterOptions) Comman
 func (c Command) AddCommands(commands ...Command) Command {
 	for _, command := range commands {
 		c.AddCommand(command.Command)
+		*command.parent = &c
+		*c.commands = append(*c.commands, command)
 	}
 	return c
 }
@@ -86,4 +104,14 @@ func (c Command) Run(run func() error) Command {
 func (c Command) AddPersistentPreRun(run func() error) Command {
 	c.addToPersistentPreRunE(wrapRunCallbackError(run))
 	return c
+}
+
+// All returns this command and all sub-commands added via AddCommands recursively as an iterator.
+func (c Command) All() iter.Seq[Command] {
+	return c.all
+}
+
+// Parents returns all parent commands up and including the root Command as an iterator.
+func (c Command) Parents() iter.Seq[Command] {
+	return c.parents
 }

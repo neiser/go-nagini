@@ -2,7 +2,10 @@ package command
 
 import (
 	"errors"
+	"iter"
+	"slices"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/neiser/go-nagini/flag"
@@ -410,4 +413,70 @@ func (v *yesOrNoType) Parse(s string) error {
 		*v = yesOrNoType(vAsBool)
 	}
 	return nil
+}
+
+func TestCommand_AllAndParents(t *testing.T) {
+	buildCommandUses := func(cmd Command) (commandUses []string) {
+		for command := range cmd.All() {
+			parentCommandUses := slices.Collect(mapSequence(command.Parents(), func(command Command) string {
+				return command.Command.Use
+			}))
+			slices.Reverse(parentCommandUses)
+			commandUses = append(commandUses, strings.Join(parentCommandUses, " "))
+		}
+		return
+	}
+
+	t.Run("simple command", func(t *testing.T) {
+		assert.Equal(t, []string{""}, buildCommandUses(New()))
+	})
+
+	t.Run("linear structure", func(t *testing.T) {
+		cmd := New().Use("0").AddCommands(New().Use("1").AddCommands(New().Use("2")))
+		assert.Equal(t, []string{
+			"0",
+			"0 1",
+			"0 1 2",
+		}, buildCommandUses(cmd))
+	})
+
+	t.Run("some tree structure", func(t *testing.T) {
+		cmd := New().Use("0").AddCommands(
+			New().Use("1").AddCommands(
+				New().Use("1-1"),
+				New().Use("1-2"),
+			),
+			New().Use("2"),
+			New().Use("3").AddCommands(
+				New().Use("3-1"),
+				New().Use("3-2").AddCommands(
+					New().Use("3-2-1"),
+				),
+				New().Use("3-3"),
+			),
+		)
+
+		assert.Equal(t, []string{
+			"0",
+			"0 1",
+			"0 1 1-1",
+			"0 1 1-2",
+			"0 2",
+			"0 3",
+			"0 3 3-1",
+			"0 3 3-2",
+			"0 3 3-2 3-2-1",
+			"0 3 3-3",
+		}, buildCommandUses(cmd))
+	})
+}
+
+func mapSequence[T, U any](items iter.Seq[T], mapper func(T) U) iter.Seq[U] {
+	return func(yield func(U) bool) {
+		for item := range items {
+			if !yield(mapper(item)) {
+				return
+			}
+		}
+	}
 }

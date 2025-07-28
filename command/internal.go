@@ -35,3 +35,29 @@ func (c Command) addToPersistentPreRunE(action func(*cobra.Command, []string) er
 		c.PersistentPreRunE = action
 	}
 }
+
+func (c Command) all(yield func(command Command) bool) {
+	if !yield(c) {
+		return
+	}
+	for _, subCommand := range *c.commands {
+		for command := range subCommand.all {
+			if !yield(command) {
+				return
+			}
+		}
+	}
+}
+
+func (c Command) parents(yield func(command Command) bool) {
+	if !yield(c) {
+		return
+	}
+	if *c.parent != nil {
+		for parent := range (*c.parent).parents {
+			if !yield(parent) {
+				return
+			}
+		}
+	}
+}
