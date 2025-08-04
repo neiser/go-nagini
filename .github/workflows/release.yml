@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Validate tag format
+      run: |
+        if [[ ! "${{ github.event.inputs.tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
+          echo "Error: Tag must follow semantic versioning format (e.g., v1.0.0, v1.0.0-beta.1)"
+          exit 1
+        fi
+
+    - name: Check if tag already exists
+      run: |
+        if git rev-parse "${{ github.event.inputs.tag }}" >/dev/null 2>&1; then
+          echo "Error: Tag ${{ github.event.inputs.tag }} already exists"
+          exit 1
+        fi
+
+    - name: Run tests
+      run: go test ./...
+
+    - name: Run go mod tidy
+      run: go mod tidy
+
+    - name: Verify no changes after mod tidy
+      run: |
+        if ! git diff --exit-code; then
+          echo "Error: go.mod or go.sum are not tidy"
+          exit 1
+        fi
+
+    - name: Create and push tag
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag -a "${{ github.event.inputs.tag }}" -m "Release ${{ github.event.inputs.tag }}"
+        git push origin "${{ github.event.inputs.tag }}"
+
+    - name: Create GitHub release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.event.inputs.tag }}
+        release_name: Release ${{ github.event.inputs.tag }}
+        draft: false
+        prerelease: ${{ contains(github.event.inputs.tag, '-') }}
