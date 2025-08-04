@@ -17,7 +17,7 @@ func main() {
 		favoriteWand Wand = "elder"
 		iAmVoldemort bool
 	)
-	command.New().
+	_ = command.New().
 		Flag(flag.String(&myName, flag.NotEmpty), flag.RegisterOptions{
 			Name:     "my-name",
 			Required: true,

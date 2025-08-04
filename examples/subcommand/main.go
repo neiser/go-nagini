@@ -14,7 +14,7 @@ func main() {
 	var (
 		useMagic bool
 	)
-	command.New().
+	_ = command.New().
 		Flag(flag.Bool(&useMagic), flag.RegisterOptions{
 			Name:       "use-magic",
 			Usage:      "Use some magic, c'mon",

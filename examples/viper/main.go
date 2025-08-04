@@ -16,7 +16,7 @@ func main() {
 		favoriteHouse = "Hufflepuff"
 		isEvil        = false
 	)
-	command.New().
+	_ = command.New().
 		Flag(
 			binding.Viper{
 				Value:     flag.String(&favoriteHouse, flag.NotEmptyTrimmed),

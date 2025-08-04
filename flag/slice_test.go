@@ -14,7 +14,7 @@ func Test_anySliceValue_Type(t *testing.T) {
 		var (
 			target []string
 		)
-		sut := NewSlice(&target, ParseSliceOf[string](NotEmptyTrimmed[string]))
+		sut := Slice(&target, ParseSliceOf[string](NotEmptyTrimmed[string]))
 		assert.Equal(t, "[]string", sut.Type())
 	})
 	t.Run("custom type", func(t *testing.T) {
@@ -23,7 +23,7 @@ func Test_anySliceValue_Type(t *testing.T) {
 		var (
 			target someTypes
 		)
-		sut := NewSlice[someType](&target, ParseSliceOf[someType](NotEmptyTrimmed[someType]))
+		sut := Slice[someType](&target, ParseSliceOf[someType](NotEmptyTrimmed[someType]))
 		assert.Equal(t, "[]someType", sut.Type())
 	})
 }
@@ -45,7 +45,7 @@ func Test_anySliceValue_Append(t *testing.T) {
 		var (
 			target = []string{"item0"}
 		)
-		sut := NewSlice(&target, ParseSliceOf[string](AnyString))
+		sut := Slice(&target, ParseSliceOf[string](AnyString))
 		require.NoError(t, sut.Append("item1"))
 		assert.Equal(t, []string{"item0", "item1"}, sut.GetSlice())
 	})
@@ -53,7 +53,7 @@ func Test_anySliceValue_Append(t *testing.T) {
 		var (
 			target = []string{"item0"}
 		)
-		sut := NewSlice(&target, ParseSliceOf[string](func(string) (string, error) {
+		sut := Slice(&target, ParseSliceOf[string](func(string) (string, error) {
 			return "", errors.New("some error")
 		}))
 		require.ErrorContains(t, sut.Append("item1"), "some error")
@@ -62,7 +62,7 @@ func Test_anySliceValue_Append(t *testing.T) {
 		var (
 			target = someSliceType{"item0"}
 		)
-		sut := NewSlice(&target, nil)
+		sut := Slice(&target, nil)
 		require.NoError(t, sut.Append("item1"))
 		assert.Equal(t, []string{"item0", "item1"}, sut.GetSlice())
 	})
@@ -73,7 +73,7 @@ func Test_anySliceValue_Replace(t *testing.T) {
 		var (
 			target = []string{"item0"}
 		)
-		sut := NewSlice(&target, ParseSliceOf[string](AnyString))
+		sut := Slice(&target, ParseSliceOf[string](AnyString))
 		require.NoError(t, sut.Replace([]string{"item0", "item1"}))
 		assert.Equal(t, []string{"item0", "item1"}, sut.GetSlice())
 	})
@@ -81,7 +81,7 @@ func Test_anySliceValue_Replace(t *testing.T) {
 		var (
 			target = []string{"item0"}
 		)
-		sut := NewSlice(&target, ParseSliceOf[string](func(string) (string, error) {
+		sut := Slice(&target, ParseSliceOf[string](func(string) (string, error) {
 			return "", errors.New("some error")
 		}))
 		require.ErrorContains(t, sut.Replace([]string{"item0", "item1"}), "some error")
@@ -90,7 +90,7 @@ func Test_anySliceValue_Replace(t *testing.T) {
 		var (
 			target = someSliceType{"item0"}
 		)
-		sut := NewSlice(&target, nil)
+		sut := Slice(&target, nil)
 		require.NoError(t, sut.Replace([]string{"item0", "item1"}))
 		assert.Equal(t, []string{"item0", "item1"}, sut.GetSlice())
 	})

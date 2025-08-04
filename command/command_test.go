@@ -322,7 +322,7 @@ func TestNew(t *testing.T) {
 			cmd := New().
 				Flag(
 					binding.Viper{
-						Value:     flag.NewSlice(&someInts, flag.ParseSliceOf[int](strconv.Atoi)),
+						Value:     flag.Slice(&someInts, flag.ParseSliceOf[int](strconv.Atoi)),
 						ConfigKey: "SOME_INTEGERS",
 					},
 					flag.RegisterOptions{Name: "some-ints"},

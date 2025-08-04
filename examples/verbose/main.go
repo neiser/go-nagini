@@ -46,7 +46,7 @@ func main() {
 		verboseLevel VerboseLevel
 		enableDebug  bool
 	)
-	command.New().
+	_ = command.New().
 		Flag(&verboseLevel, flag.RegisterOptions{Name: "verbose", Shorthand: "v"}).
 		Flag(flag.Bool(&enableDebug), flag.RegisterOptions{Name: "debug"}).
 		MarkFlagsMutuallyExclusive(&enableDebug, &verboseLevel).

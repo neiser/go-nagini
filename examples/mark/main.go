@@ -12,7 +12,7 @@ func main() {
 		name         = "Harry"
 		iAmVoldemort bool
 	)
-	command.New().
+	_ = command.New().
 		Flag(flag.String(&name, flag.NotEmpty), flag.RegisterOptions{
 			Name: "name",
 		}).

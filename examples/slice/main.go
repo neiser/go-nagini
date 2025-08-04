@@ -12,8 +12,8 @@ func main() {
 	var (
 		someInts []int
 	)
-	command.New().
-		Flag(flag.NewSlice(&someInts, flag.ParseSliceOf(strconv.Atoi)), flag.RegisterOptions{
+	_ = command.New().
+		Flag(flag.Slice(&someInts, flag.ParseSliceOf(strconv.Atoi)), flag.RegisterOptions{
 			Name:     "some-ints",
 			Required: true,
 		}).

@@ -10,20 +10,20 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// Slice is constructed from NewSlice.
+// SliceValue is constructed from Slice.
 // This interface explicitly declares that this is a pflag.SliceValue,
 // but it must also implement Value to make it registrable as a command flag.
 // See also String and Bool.
-type Slice interface {
+type SliceValue interface {
 	Value
 	pflag.SliceValue
 }
 
-// NewSlice construct a new Slice flag having multiple values, parsed by given SliceParser.
+// Slice construct a new Slice flag having multiple values, parsed by given SliceParser.
 // See also ParseSliceOf.
 // If SliceParser is nil, falls back to an implementation of SliceTargetParser on type *E,
 // panics if nothing is found.
-func NewSlice[T any, E ~[]T](target *E, parser SliceParser[T]) Slice {
+func Slice[T any, E ~[]T](target *E, parser SliceParser[T]) SliceValue {
 	result := anySliceValue[T, E]{target: target, parser: parser}
 	if parser == nil {
 		var ok bool

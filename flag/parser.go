@@ -45,7 +45,7 @@ func AnyString[T ~string](s string) (T, error) {
 	return T(s), nil
 }
 
-// SliceParser is a Parser Slice, see NewSlice and ParseSliceOf.
+// SliceParser is a Parser for SliceValue, see Slice and ParseSliceOf.
 type SliceParser[T any] func(ss []string) ([]T, error)
 
 // SliceTargetParser can be implemented by given target pointers
