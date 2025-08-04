@@ -46,7 +46,7 @@ func main() {
     favoriteWand Wand = "elder"
     iAmVoldemort bool
   )
-  command.New().
+  _ = command.New().
     Flag(flag.String(&myName, flag.NotEmpty), flag.RegisterOptions{
       Name:     "my-name",
       Required: true,
@@ -93,8 +93,8 @@ func main() {
   var (
     someInts []int
   )
-  command.New().
-    Flag(flag.NewSlice(&someInts, flag.ParseSliceOf(strconv.Atoi)), flag.RegisterOptions{
+  _ = command.New().
+    Flag(flag.Slice(&someInts, flag.ParseSliceOf(strconv.Atoi)), flag.RegisterOptions{
       Name:     "some-ints",
       Required: true,
     }).
@@ -132,7 +132,7 @@ func main() {
   var (
     useMagic bool
   )
-  command.New().
+  _ = command.New().
     Flag(flag.Bool(&useMagic), flag.RegisterOptions{
       Name:       "use-magic",
       Usage:      "Use some magic, c'mon",
@@ -202,7 +202,7 @@ func main() {
     favoriteHouse = "Hufflepuff"
     isEvil        = false
   )
-  command.New().
+  _ = command.New().
     Flag(
       binding.Viper{
         Value:     flag.String(&favoriteHouse, flag.NotEmptyTrimmed),
@@ -272,7 +272,7 @@ func main() {
     name         = "Harry"
     iAmVoldemort bool
   )
-  command.New().
+  _ = command.New().
     Flag(flag.String(&name, flag.NotEmpty), flag.RegisterOptions{
       Name: "name",
     }).
@@ -358,7 +358,7 @@ func main() {
     verboseLevel VerboseLevel
     enableDebug  bool
   )
-  command.New().
+  _ = command.New().
     Flag(&verboseLevel, flag.RegisterOptions{Name: "verbose", Shorthand: "v"}).
     Flag(flag.Bool(&enableDebug), flag.RegisterOptions{Name: "debug"}).
     MarkFlagsMutuallyExclusive(&enableDebug, &verboseLevel).
