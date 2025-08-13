@@ -2,7 +2,7 @@ module github.com/neiser/go-nagini
 
 go 1.23
 
-toolchain go1.24.5
+toolchain go1.25.0
 
 require (
 	github.com/spf13/cobra v1.9.1
