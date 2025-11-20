@@ -12,7 +12,7 @@ jobs:
     name: Embed code
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Convert tabs to spaces for README.md embedding
         run: find examples -type f -name "*.go" -exec sed -i 's/\t/  /g' {} +
